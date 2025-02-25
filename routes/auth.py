@@ -35,8 +35,11 @@ def login():
     password = data.get("password")
 
     user = User.query.filter_by(email=email).first()
-    if not user or not user.check_password(password):
-        return jsonify({"error": "Invalid credentials"}), 401
+    if not user:
+        return jsonify({"error": "Email not found"}), 401
+
+    if not user.check_password(password):
+        return jsonify({"error": "Incorrect password"}), 401
 
     access_token = create_access_token(identity=user.id)
     return jsonify({"access_token": access_token}), 200
