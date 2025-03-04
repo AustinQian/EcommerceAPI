@@ -2,24 +2,21 @@ from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
-import os
-
-# Load environment variables from .env file
-load_dotenv()
+from flask_mail import Mail
+from config import Config
 
 db = SQLAlchemy()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__)
 
-    # Load config directly from environment variables
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "your_secret_key_here")
+    # Load configuration from Config class
+    app.config.from_object(Config)
 
-    # Initialize Extensions
+    # Initialize extensions
     db.init_app(app)
+    mail.init_app(app)
     Migrate(app, db)
     jwt = JWTManager(app)
 
