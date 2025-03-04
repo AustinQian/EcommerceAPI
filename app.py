@@ -1,16 +1,22 @@
 from flask import Flask, jsonify
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
-from models import db
-from routes.auth import auth_bp
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
 import os
 
-# Create Flask app
+# Load environment variables from .env file
+load_dotenv()
+
+db = SQLAlchemy()
+
 def create_app():
     app = Flask(__name__)
 
-    # Load Configuration
-    app.config.from_object("config.Config")
+    # Load config directly from environment variables
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "your_secret_key_here")
 
     # Initialize Extensions
     db.init_app(app)
@@ -18,6 +24,7 @@ def create_app():
     jwt = JWTManager(app)
 
     # Register Routes
+    from routes.auth import auth_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
     # Error Handling
@@ -27,7 +34,6 @@ def create_app():
 
     return app
 
-# Run App
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)

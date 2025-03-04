@@ -12,13 +12,24 @@ def register():
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
+    confirm_password = data.get("confirm_password")
     existing_user = User.query.filter_by(username=data['username']).first()
 
+    #Check for existing username
     if existing_user:
         return jsonify({"error": "Username already existed"}), 400
+    
+    # Check if passwords match
+    if password != confirm_password:
+        return jsonify({"error": "Passwords do not match"}), 400
 
-    if not username or not email or not password:
-        return jsonify({"error": "Missing fields"}), 400
+    #Check for missing fiels
+    if not username or not email or not password or not confirm_password:
+        return jsonify({"error": "All fields are required"}), 400
+    
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return jsonify({"error": "Username already exists"}), 400
 
     user = User(username=username, email=email)
     user.set_password(password)
