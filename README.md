@@ -1,0 +1,1 @@
+TO use this API, run pip install reuqirements.txt and configure your database

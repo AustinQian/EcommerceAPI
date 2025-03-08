@@ -1,11 +1,12 @@
-from flask import Blueprint, request, jsonify, url_for
+from flask import Blueprint, request, jsonify
 from models import db
 from itsdangerous import URLSafeTimedSerializer
 from models.user import User
-from config import Config
 from flask_jwt_extended import create_access_token
 from services.email_verification import generate_verification_token, send_verification_email, verify_verification_token
 from services.validation import is_valid_email, is_valid_password
+from services import generate_reset_token, send_reset_email, verify_reset_token
+
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -106,7 +107,7 @@ def verify_email(token):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # ✅ Mark email as verified
+    # Mark email as verified
     if user.email_verified:
         return jsonify({"message": "Email already verified."}), 200
     
@@ -114,3 +115,45 @@ def verify_email(token):
     db.session.commit()
 
     return jsonify({"message": "Email successfully verified."}), 200
+
+@auth_bp.route("/reset_request", methods=["POST"])
+def request_password_reset():
+    data = request.get_json()
+    email = data.get("email")
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "Email not found"}), 404
+
+    token = generate_reset_token(email)
+    send_reset_email(email, token)
+
+    return jsonify({"message": "Password reset link sent to your email"}), 200
+
+
+@auth_bp.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if request.method == "GET":
+        return jsonify({"message": "Token is valid. Redirect to password reset form."})
+
+    if request.method == "POST":
+        data = request.get_json()
+        new_password = data.get("password")
+        confirm_password = data.get("confirm_password")
+        
+        # Validate token and update password
+        email = verify_reset_token(token)
+        if not email:
+            return jsonify({"error": "Invalid or expired token"}), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        if new_password!=confirm_password:
+            return jsonify({"error": "New password does not match confirm password"}), 401
+        
+        user.set_password(new_password)
+        db.session.commit()
+        
+        return jsonify({"message": "Password reset successful"}), 200
