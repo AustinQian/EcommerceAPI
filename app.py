@@ -23,7 +23,9 @@ def create_app():
     mail.init_app(app)
 
     from routes.auth import auth_bp
+    from routes.home import home_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(home_bp, url_prefix="/")
 
     #Future Blueprints
     #app.register_blueprint(product_bp, url_prefix="/api/products")
