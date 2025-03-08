@@ -3,3 +3,7 @@
 
 # Ignore config file
 config.py
+
+# Ignore GCP deploy file
+app.yaml
+.gcloudignore
