@@ -13,7 +13,7 @@ def generate_verification_token(email):
 
 # Send email verification link
 def send_verification_email(email, token):
-    verification_link = str(f"http://127.0.0.1:5000/api/auth/verify/{token}")
+    verification_link = str(f"https://ecommerceapi-production-48c7.up.railway.app/api/auth/verify/{token}")
     msg = Message(
         subject="Email Verification",
         recipients=[email],
