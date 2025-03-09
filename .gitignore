@@ -4,6 +4,9 @@
 # Ignore config file
 config.py
 
+#Ignore database
+database.py
+
 # Ignore GCP deploy file
 app.yaml
 .gcloudignore
