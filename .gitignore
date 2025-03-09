@@ -12,3 +12,4 @@ app.yaml
 .gcloudignore
 
 __pycache__/
+models/__pycache__
