@@ -7,3 +7,6 @@ config.py
 # Ignore GCP deploy file
 app.yaml
 .gcloudignore
+
+__pycache__
+models/__pycache__
