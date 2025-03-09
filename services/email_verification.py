@@ -1,12 +1,14 @@
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer
-from config import Config  # Import your SECRET_KEY from config
+#from config import Config  # Import your SECRET_KEY from config
 from app import mail  # Import the initialized mail instance
 
 # Generate a verification token for email
 def generate_verification_token(email):
-    serializer = URLSafeTimedSerializer(Config.SECRET_KEY)
-    return serializer.dumps(email, salt=Config.SECURITY_PASSWORD_SALT)
+    SECRET_KEY="secret"
+    SECURITY_PASSWORD_SALT="salt"
+    serializer = URLSafeTimedSerializer(SECRET_KEY)
+    return serializer.dumps(email, salt=SECURITY_PASSWORD_SALT)
 
 # Send email verification link
 def send_verification_email(email, token):
