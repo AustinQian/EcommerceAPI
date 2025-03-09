@@ -10,7 +10,7 @@ def create_app():
 
     # PostgreSQL Database Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-        "DATABASE_URL", "postgresql://momori:123456@localhost/carcommerce"
+        "DATABASE_URL", "postgresql://ecommerce:123456@34.148.186.210:5432/ecommerce"
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
