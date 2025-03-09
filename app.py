@@ -23,6 +23,7 @@ def create_app(*args, **kwargs):
     #app.config.from_object(Config)
     db_connect = os.environ.get("DATABASE_URL")
     app.config["SQLALCHEMY_DATABASE_URI"] = db_connect
+    print("DATABASE_URL:", db_connect)
 
     mail_user=os.environ.get("MAIL_USERNAME","test@email.com")
     app.config["MAIL_USERNAME"] = mail_user
@@ -79,10 +80,11 @@ def create_app(*args, **kwargs):
     def health():
         return "OK", 200
 
+
     
     return app
 
-#app = create_app()
+app = create_app()
 
 # Run App
 #if __name__ == "__main__":
