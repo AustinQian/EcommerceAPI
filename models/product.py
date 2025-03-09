@@ -16,4 +16,5 @@ class Product(db.Model):
 
     # Relationships
     seller = db.relationship("User", backref="products")
-    category = db.relationship("Category", backref="product_list")
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
+

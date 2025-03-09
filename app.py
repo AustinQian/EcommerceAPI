@@ -74,7 +74,7 @@ def create_app(*args, **kwargs):
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"error": "Not Found"}), 404
-
+    
     return app
 
 #app = create_app()

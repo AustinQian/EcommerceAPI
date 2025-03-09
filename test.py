@@ -1,2 +1,2 @@
-from database import db
-print(db.engine.url)
+#from database import db
+#print(db.engine.url)
