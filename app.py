@@ -14,8 +14,7 @@ mail = Mail()
 jwt = JWTManager()
 
 # Create Flask app
-def create_app(arg1, arg2):
-    print("arg1",arg1,"arg2",arg2)
+def create_app():
     app = Flask(__name__)
     # Load environment variables from .env file if running locally
     if os.getenv("RAILWAY_ENV") is None:  # Railway automatically injects its env vars
