@@ -157,3 +157,4 @@ def reset_password(token):
         db.session.commit()
         
         return jsonify({"message": "Password reset successful"}), 200
+

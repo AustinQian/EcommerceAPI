@@ -75,6 +75,11 @@ def create_app(*args, **kwargs):
     def not_found(error):
         return jsonify({"error": "Not Found"}), 404
     
+    @app.route("/health")
+    def health():
+        return "OK", 200
+
+    
     return app
 
 #app = create_app()
