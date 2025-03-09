@@ -16,19 +16,5 @@ class Product(db.Model):
 
     # Relationships
     seller = db.relationship("User", backref="products")
-    category = db.relationship("Category", backref="product_list")
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
 
-    def to_dict(self):
-        """Convert Product object to dictionary (for JSON responses)"""
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "price": self.price,
-            "stock": self.stock,
-            "image_url": self.image_url,
-            "seller_id": self.seller_id,
-            "category_id": self.category_id,
-            "category_name": self.category.name if self.category else None, 
-            "created_at": self.created_at.isoformat(),
-        }
