@@ -36,7 +36,7 @@ def create_app():
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"error": "Not Found"}), 404
-
+    
     return app
 
 # Run App
