@@ -81,7 +81,7 @@ def create_app(*args, **kwargs):
 
 app = create_app()
 
-CORS(app, origins="*")
+CORS(app)
 
 # Run App
 #if __name__ == "__main__":
