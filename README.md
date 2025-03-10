@@ -216,7 +216,3 @@ All endpoints are prefixed with `/api/auth`.
 
 - **Error Handling:**  
   API responses return clear error messages and proper HTTP status codes based on the type of failure.
-
----
-
-This documentation serves as a template for your authentication API. You can customize and expand it to include further details such as request/response examples for edge cases, rate limiting information, and security considerations.
