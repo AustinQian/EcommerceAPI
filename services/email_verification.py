@@ -1,6 +1,5 @@
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer
-#from config import Config  # Import your SECRET_KEY from config
 from app import mail  # Import the initialized mail instance
 
 SECRET_KEY="secret"
