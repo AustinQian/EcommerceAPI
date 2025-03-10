@@ -1,5 +1,6 @@
 import os
 from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
@@ -12,6 +13,7 @@ from dotenv import load_dotenv
 
 mail = Mail()
 jwt = JWTManager()
+
 
 # Create Flask app
 def create_app(*args, **kwargs):
@@ -78,6 +80,8 @@ def create_app(*args, **kwargs):
     return app
 
 app = create_app()
+
+CORS(app, origins="*")
 
 # Run App
 #if __name__ == "__main__":
