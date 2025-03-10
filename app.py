@@ -18,6 +18,9 @@ jwt = JWTManager()
 # Create Flask app
 def create_app(*args, **kwargs):
     app = Flask(__name__)
+
+    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})
     # Load environment variables from .env file if running locally
     if os.getenv("RAILWAY_ENV") is None:  # Railway automatically injects its env vars
         load_dotenv()
@@ -77,11 +80,11 @@ def create_app(*args, **kwargs):
     def not_found(error):
         return jsonify({"error": "Not Found"}), 404
     
+    
     return app
 
 app = create_app()
 
-CORS(app)
 
 # Run App
 #if __name__ == "__main__":
