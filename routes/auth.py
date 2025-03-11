@@ -96,7 +96,7 @@ def login():
 
     access_token = create_access_token(identity=user.id)
     login_user(user, remember=remember_me)
-    return jsonify({"access_token": access_token}), 200
+    return jsonify({"access_token": access_token, "remember: ": remember_me}), 200
 
 # Email verification route
 @auth_bp.route("/verify/<token>", methods=["GET"])
