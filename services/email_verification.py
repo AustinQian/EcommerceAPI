@@ -16,7 +16,7 @@ def send_verification_email(email, token):
     msg = Message(
         subject="Email Verification",
         recipients=[email],
-        body=f"Click the link to verify your email: {verification_link}",
+        body=f"This is the email verify link for team-13 group project: {verification_link}",
     )
     mail.send(msg)
 
