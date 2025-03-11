@@ -3,6 +3,7 @@ from models import db
 from itsdangerous import URLSafeTimedSerializer
 from models.user import User
 from flask_jwt_extended import create_access_token
+from flask_login import login_user
 from services.email_verification import generate_verification_token, send_verification_email, verify_verification_token
 from services.validation import is_valid_email, is_valid_password
 from services import generate_reset_token, send_reset_email, verify_reset_token
@@ -77,6 +78,7 @@ def login():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
+    remember_me = data.get("remember", False)
     
     user = User.query.filter_by(email=email).first()
     if not user:
@@ -89,10 +91,11 @@ def login():
     if not user.check_password(password):
         return jsonify({"error": "Incorrect password"}), 401
     
-    if not user.email_verified:
+    if not user.email_verify:
         return jsonify({"error": "Email not verified. Please check your email."}), 403
 
     access_token = create_access_token(identity=user.id)
+    login_user(user, remember=remember_me)
     return jsonify({"access_token": access_token}), 200
 
 # Email verification route
@@ -108,10 +111,10 @@ def verify_email(token):
         return jsonify({"error": "User not found"}), 404
 
     # Mark email as verified
-    if user.email_verified:
+    if user.email_verify:
         return jsonify({"message": "Email already verified."}), 200
     
-    user.email_verified = True
+    user.email_verify = True
     db.session.commit()
 
     return jsonify({"message": "Email successfully verified."}), 200

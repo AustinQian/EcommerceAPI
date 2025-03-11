@@ -1,10 +1,11 @@
 from models import db
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from flask_login import UserMixin
 
 bcrypt = Bcrypt()
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "_user"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -13,7 +14,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(10), nullable=False, default="customer")  # "seller" or "customer"
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    email_verified = db.Column(db.Boolean, default=False)
+    email_verify = db.Column(db.Boolean, default=False)
 
 
     def set_password(self, password):

@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager
 from flask_mail import Mail
 from models import db
 from dotenv import load_dotenv
+from flask_login import LoginManager
 #from config import Config
 #from routes.product import product_bp
 #from routes.order import order_bp
@@ -65,6 +66,16 @@ def create_app(*args, **kwargs):
     jwt.init_app(app)
     mail.init_app(app)
 
+    # Initialize flask_login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        from models.user import User  # Import here to avoid circular imports
+        return User.query.get(int(user_id))
+
     from routes.auth import auth_bp
     from routes.home import home_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
@@ -84,8 +95,3 @@ def create_app(*args, **kwargs):
     return app
 
 app = create_app()
-
-
-# Run App
-#if __name__ == "__main__":
-#    app.run(debug=True)
