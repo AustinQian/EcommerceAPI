@@ -7,6 +7,7 @@ from flask_mail import Mail
 from models import db
 from dotenv import load_dotenv
 from flask_login import LoginManager
+from datetime import timedelta
 #from config import Config
 #from routes.product import product_bp
 #from routes.order import order_bp
@@ -59,6 +60,8 @@ def create_app(*args, **kwargs):
 
     secure_pass_salt=os.environ.get("SECURITY_PASSWORD_SALT","yoursalt")
     app.config["SECURITY_PASSWORD_SALT"] = secure_pass_salt
+
+    app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
 
     # Initialize Extensions
     db.init_app(app)

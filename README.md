@@ -71,7 +71,8 @@ All endpoints are prefixed with `/api/auth`.
   ```json
   {
     "email": "john@example.com",
-    "password": "SecurePassword123!"
+    "password": "SecurePassword123!",
+    "remember": "true"
   }
   ```
 
