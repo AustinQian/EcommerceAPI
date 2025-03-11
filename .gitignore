@@ -1,8 +1,8 @@
 # Ignore environment files
-#.env
+.env
 
 # Ignore config file
-#config.py
+config.py
 
 #Ignore database
 database.py
