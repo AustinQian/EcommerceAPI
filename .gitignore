@@ -11,5 +11,8 @@ database.py
 app.yaml
 .gcloudignore
 
+#Ignore venv
+venv/
+
 __pycache__/
 models/__pycache__
