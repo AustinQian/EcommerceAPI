@@ -11,10 +11,7 @@ group_buy_bp = Blueprint('group_buy_bp', __name__, url_prefix='/groupbuy')
 @group_buy_bp.route('', methods=['POST'])
 @login_required
 def create_group_buy():
-    """
-    Create a new group buy for a specific product.
-    Body params: product_id, discount_percentage, min_participants
-    """
+    # Create a new group buy for a specific product.
     data = request.get_json()
     product_id = data.get('product_id')
     discount_percentage = data.get('discount_percentage')
@@ -45,10 +42,9 @@ def create_group_buy():
 
 @group_buy_bp.route('/<unique_link>', methods=['GET'])
 def get_group_buy(unique_link):
-    """
-    Retrieve details about a specific group buy using the unique link.
-    """
+    # Retrieve details about a specific group buy using the unique link.
     group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
+    participant_count = group_buy.get_participant_count()
     if not group_buy:
         return jsonify({'error': 'Group buy not found'}), 404
 
@@ -59,16 +55,14 @@ def get_group_buy(unique_link):
         'min_participants': group_buy.min_participants,
         'current_participants': group_buy.current_participants,
         'unique_link': group_buy.unique_link,
-        'is_active': group_buy.is_active
+        'is_active': group_buy.is_active,
+        'participant_count': participant_count
     }), 200
 
 @group_buy_bp.route('/join/<unique_link>', methods=['POST'])
 @login_required
 def join_group_buy(unique_link):
-    """
-    Join a group buy using the unique link.
-    Increments the participant count and records the user in group_buy_participants.
-    """
+    # Join a group buy using the unique link.
     group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
     if not group_buy:
         return jsonify({'error': 'Group buy not found'}), 404
@@ -104,10 +98,7 @@ def join_group_buy(unique_link):
 @group_buy_bp.route('/apply-discount/<int:cart_id>', methods=['POST'])
 @login_required
 def apply_group_buy_discount(cart_id):
-    """
-    Apply the group-buy discount to the items in the user's cart (if applicable).
-    Body params: group_buy_id
-    """
+    # Apply the group-buy discount to the items in the user's cart (if applicable).
     data = request.get_json()
     group_buy_id = data.get('group_buy_id')
     if not group_buy_id:
@@ -145,3 +136,4 @@ def apply_group_buy_discount(cart_id):
         'original_price': original_price,
         'discounted_price': cart_item.discounted_price
     }), 200
+

@@ -12,3 +12,7 @@ class GroupBuyParticipant(db.Model):
     # Relationship
     group_buy = db.relationship("GroupBuy", backref="participants")
     user = db.relationship("User", backref="joined_group_buys")
+
+    def get_participant_count(self):
+        # Returns the number of users participating in this group buy using a database count.
+        return len(self.participants)
