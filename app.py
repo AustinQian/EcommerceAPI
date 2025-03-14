@@ -83,10 +83,12 @@ def create_app(*args, **kwargs):
     from routes.home import home_bp
     from routes.cart import cart_bp
     from routes.product import product_bp
+    from routes.group_buy import group_buy_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(home_bp, url_prefix="/")
     app.register_blueprint(product_bp, url_prefix="/api/products")
     app.register_blueprint(cart_bp, url_prefix="/api/cart")
+    app.register_blueprint(group_buy_bp, url_prefix="/api/groupbuy")
 
     #Future Blueprints
     #app.register_blueprint(product_bp, url_prefix="/api/products")

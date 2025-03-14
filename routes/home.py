@@ -39,3 +39,4 @@ def homepage():
     }
 
     return jsonify(response)
+

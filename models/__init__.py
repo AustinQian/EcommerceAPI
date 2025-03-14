@@ -10,3 +10,5 @@ from models.cart import Cart
 from models.order_item import OrderItem
 from models.review import Review
 from models.category import Category
+from models.group_buy import GroupBuy
+from models.group_buy_participant import GroupBuyParticipant
