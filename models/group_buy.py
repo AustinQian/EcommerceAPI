@@ -23,3 +23,7 @@ class GroupBuy(db.Model):
         self.min_participants = min_participants
         # Generate a unique link for inviting friends (e.g., a UUID-based slug)
         self.unique_link = str(uuid.uuid4())[:8]
+
+    def get_participant_count(self):
+        # Returns the number of users participating in this group buy using a database count.
+        return len(self.participants)
