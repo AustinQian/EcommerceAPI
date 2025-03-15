@@ -44,6 +44,7 @@ def create_group_buy():
 def get_group_buy(unique_link):
     # Retrieve details about a specific group buy using the unique link.
     group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
+    participants = GroupBuyParticipant.get_participant_count()
     if not group_buy:
         return jsonify({'error': 'Group buy not found'}), 404
 
@@ -55,7 +56,7 @@ def get_group_buy(unique_link):
         'current_participants': group_buy.current_participants,
         'unique_link': group_buy.unique_link,
         'is_active': group_buy.is_active,
-        'participant_count': group_buy.get_participant_count()
+        'participant_count': participants
     }), 200
 
 @group_buy_bp.route('/join/<unique_link>', methods=['POST'])
