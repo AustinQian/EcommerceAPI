@@ -93,7 +93,6 @@ def create_app(*args, **kwargs):
     #Future Blueprints
     #app.register_blueprint(product_bp, url_prefix="/api/products")
     #app.register_blueprint(order_bp, url_prefix="/api/orders")
-    #app.register_blueprint(cart_bp, url_prefix="/api/cart")
 
     # Error Handling
     @app.errorhandler(404)
