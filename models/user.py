@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(10), nullable=False, default="customer")  # "seller" or "customer"
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     email_verify = db.Column(db.Boolean, default=False)
+    credits = db.Column(db.Float, default=0.0)
 
 
     def set_password(self, password):
@@ -22,3 +23,14 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
+    
+    def award_credits(self, purchase_amount, credit_rate=0.05):
+        credits_earned = purchase_amount * credit_rate
+        self.credits += credits_earned
+        return credits_earned
+
+    
+    def __init__(self, email, password, credits=0.0):
+        self.email = email
+        self.password = password
+        self.credits = credits
