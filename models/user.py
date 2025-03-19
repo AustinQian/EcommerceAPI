@@ -24,7 +24,7 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
     
-    def award_credits(self, purchase_amount, credit_rate=0.05):
+    def award_credits(self, purchase_amount, credit_rate=0.01):
         credits_earned = purchase_amount * credit_rate
         self.credits += credits_earned
         return credits_earned

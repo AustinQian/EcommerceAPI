@@ -6,6 +6,20 @@ from models import db
 
 cart_bp = Blueprint('cart_bp', __name__, url_prefix='/cart')
 
+COUPONS = {
+    "P1Q8": {
+        "discount_percentage": 15,  # 15% discount
+        "is_expired": False,
+        "is_used": False
+    },
+    "ASCX": {
+        "discount_percentage": 10,  # 10% discount
+        "is_expired": True,        # Example of an expired coupon
+        "is_used": False
+    }
+}
+
+
 # GET /cart - Retrieve the current user's cart items
 @cart_bp.route('', methods=['GET'])
 @login_required
@@ -108,3 +122,45 @@ def checkout():
     }), 200
 
 
+@cart_bp.route('/apply-coupon', methods=['POST'])
+@login_required
+def apply_coupon():\
+    # Validates a coupon code and applies a discount to the user's cart total.
+    data = request.get_json()
+    coupon_code = data.get('coupon_code')
+
+    # 1) Validate coupon code input
+    if not coupon_code or coupon_code not in COUPONS:
+        return jsonify({"error": "Invalid coupon code"}), 400
+
+    coupon_info = COUPONS[coupon_code]
+
+    # 2) Check if coupon is expired or already used
+    if coupon_info["is_expired"]:
+        return jsonify({"error": "This coupon is expired"}), 400
+    if coupon_info["is_used"]:
+        return jsonify({"error": "This coupon has already been used"}), 400
+
+    # 3) Calculate the user's cart total
+    cart_items = Cart.query.filter_by(user_id=current_user.id).all()
+    if not cart_items:
+        return jsonify({"error": "Cart is empty"}), 400
+
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
+
+    # 4) Apply the discount
+    discount_percentage = coupon_info["discount_percentage"]
+    discount_amount = total_price * (discount_percentage / 100.0)
+    new_total = total_price - discount_amount
+
+    # 5) Mark the coupon as used (if you only allow one-time usage)
+    coupon_info["is_used"] = True
+
+    # 6) Return the updated total
+    return jsonify({
+        "message": "Coupon applied successfully",
+        "original_total": total_price,
+        "discount_percentage": discount_percentage,
+        "discount_amount": discount_amount,
+        "new_total": new_total
+    }), 200

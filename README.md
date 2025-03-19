@@ -331,7 +331,177 @@ The Group Buying Discounts feature allows users to get a lower price when enough
 - **401 Unauthorized**: User not authenticated when trying to join or apply discounts.  
 - **404 Not Found**: Invalid group buy link or non-existent resource.  
 
+
+---
+# Cart Blueprint Documentation
+
+This document provides detailed documentation for the Cart Blueprint of our e-commerce application. The Cart Blueprint manages all cart-related actions such as adding items, retrieving cart items, removing items, checking out, and applying user credits.
+
+## Table of Contents
+1. [Overview](#overview)
+2. [Authentication](#authentication)
+3. [Endpoints](#endpoints)
+    - [GET /cart](#get-cart)
+    - [POST /cart](#post-cart)
+    - [DELETE /cart/<cart_id>](#delete-cart)
+    - [POST /cart/checkout](#post-cartcheckout)
+    - [POST /cart/apply-credits](#post-cartapply-credits)
+4. [Error Handling](#error-handling)
+5. [Usage Examples](#usage-examples)
+
+## Overview
+The Cart Blueprint provides the following functionalities:
+- **Retrieve Cart Items**: Get all items currently in the user's cart.
+- **Add to Cart**: Add a product to the cart or update the quantity if it already exists.
+- **Remove from Cart**: Remove a specific cart item.
+- **Checkout**: Finalize the purchase by:
+  - Validating cart items and product stock,
+  - Optionally applying credits to reduce the total price,
+  - Deducting product stock,
+  - Clearing the cart, and
+  - Awarding credits based on the purchase amount.
+- **Apply Credits**: Optionally reduce the cart total by applying available user credits.
+
+## Authentication
+All endpoints require the user to be authenticated. Ensure your request includes the appropriate authentication headers:
+- **JWT Authentication**:  
+  Include the header `Authorization: Bearer <your_token>`.
+- **Session-based Authentication**:  
+  Postman will handle cookies if enabled.
+
+## Endpoints
+
+### GET /cart
+- **Description**: Retrieves the current user's cart items.
+- **Method**: GET
+- **URL**: `/cart`
+- **Headers**:
+  - `Authorization: Bearer <your_token>`
+- **Response Example (200 OK)**:
+  ```json
+  [
+      {
+          "cart_id": 1,
+          "product_id": 101,
+          "quantity": 2,
+          "product_name": "Product A",
+          "price": 19.99
+      },
+      {
+          "cart_id": 2,
+          "product_id": 102,
+          "quantity": 1,
+          "product_name": "Product B",
+          "price": 29.99
+      }
+  ]
+  ```
+
+### POST /cart
+- **Description**: Adds a product to the cart or updates its quantity if it already exists.
+- **Method**: POST
+- **URL**: `/cart`
+- **Headers**:
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_token>`
+- **Request Body Example**:
+  ```json
+  {
+      "product_id": 101,
+      "quantity": 2
+  }
+  ```
+- **Response Example (200 OK)**:
+  ```json
+  {
+      "message": "Product added to cart successfully"
+  }
+  ```
+
+### DELETE /cart/<cart_id>
+- **Description**: Removes a specific item from the cart.
+- **Method**: DELETE
+- **URL**: `/cart/<cart_id>`
+- **Headers**:
+  - `Authorization: Bearer <your_token>`
+- **Response Example (200 OK)**:
+  ```json
+  {
+      "message": "Item removed from cart"
+  }
+  ```
+
+### POST /cart/checkout
+- **Description**: Processes the checkout for all items in the cart. This endpoint:
+  - Validates that the cart is not empty.
+  - Optionally applies user credits to reduce the total price.
+  - Checks product stock and deducts stock accordingly.
+  - Clears the cart.
+  - Awards credits based on the purchase amount.
+- **Method**: POST
+- **URL**: `/cart/checkout`
+- **Headers**:
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_token>`
+- **Request Body Example (Optional Credits Application)**:
+  ```json
+  {
+      "credits_to_apply": 10.0
+  }
+  ```
+- **Response Example (200 OK)**:
+  ```json
+  {
+      "message": "Checkout successful",
+      "final_total": 90.0,
+      "credits_earned": 4.5,
+      "remaining_credits": 40.0
+  }
+  ```
+
+### POST /cart/apply-credits
+- **Description**: Applies user credits to reduce the total price of the items in the cart without performing a full checkout.
+- **Method**: POST
+- **URL**: `/cart/apply-credits`
+- **Headers**:
+  - `Content-Type: application/json`
+  - `Authorization: Bearer <your_token>`
+- **Request Body Example**:
+  ```json
+  {
+      "credits_to_apply": 15.0
+  }
+  ```
+- **Response Example (200 OK)**:
+  ```json
+  {
+      "message": "Credits applied successfully",
+      "old_total": 100.0,
+      "new_total": 85.0,
+      "credits_used": 15.0,
+      "remaining_credits": 35.0
+  }
+  ```
+
+## Error Handling
+The API returns clear error messages with appropriate HTTP status codes:
+- **400 Bad Request**: For cases like insufficient stock, empty cart, or insufficient credits.
+- **401 Unauthorized**: When authentication is missing or invalid.
+- **404 Not Found**: If the requested product or cart item does not exist.
+
+## Usage Examples
+You can test these endpoints using Postman:
+1. **GET /cart**: Retrieve your current cart items.
+2. **POST /cart**: Add a product by sending JSON with `product_id` and `quantity`.
+3. **DELETE /cart/{cart_id}**: Remove an item from your cart.
+4. **POST /cart/checkout**: Finalize your order; optionally include `"credits_to_apply"` to reduce your total.
+5. **POST /cart/apply-credits**: Apply credits to see the updated cart total without checking out.
+
 ---
 
-**Note**: Integrate these routes into your existing Flask project, register the blueprint with a prefix (e.g., `/api/groupbuy`), and run database migrations to create the new tables. Adjust the logic to match your specific models (e.g., cart structure, user model) and desired user flow.
+*Note*: Make sure your server is running and that you have valid authentication tokens to access these endpoints.
+```
 
+---
+
+This README file provides a structured, clear overview of your Cart Blueprint’s functionality, how to use its endpoints, and how errors are handled. You can customize this template to suit your project’s details and style.
