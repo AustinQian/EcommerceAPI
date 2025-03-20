@@ -9,10 +9,7 @@ from models import db  # Database instance
 home_bp = Blueprint("home", __name__)
 
 @home_bp.route("/", methods=["GET"])
-def homepage():
-    """API endpoint to serve homepage content"""
-    
-    # Fetch featured products (e.g., latest 5 products)
+def homepage():# Fetch featured products (e.g., latest 5 products)
     featured_products = Product.query.order_by(Product.created_at.desc()).limit(5).all()
     
     # Fetch top categories
@@ -39,4 +36,23 @@ def homepage():
     }
 
     return jsonify(response)
+
+@home_bp.route("/home", methods=["GET"])
+def all_products():
+    products = Product.query.all()
+    product_list = []
+    for product in products:
+        product_list.append({
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "price": product.price,
+            "stock": product.stock,
+            "image_url": product.image_url,
+            "seller_id": product.seller_id,
+            "category_id": product.category_id,
+            "created_at": product.created_at.isoformat() if product.created_at else None
+        })
+    return jsonify(product_list), 200
+
 
