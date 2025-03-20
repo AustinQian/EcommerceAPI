@@ -500,7 +500,6 @@ You can test these endpoints using Postman:
 ---
 
 *Note*: Make sure your server is running and that you have valid authentication tokens to access these endpoints.
-```
 
 ---
 ## Home Route
