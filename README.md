@@ -503,5 +503,89 @@ You can test these endpoints using Postman:
 ```
 
 ---
+## Home Route
+### GET `/home`
 
-This README file provides a structured, clear overview of your Cart Blueprint’s functionality, how to use its endpoints, and how errors are handled. You can customize this template to suit your project’s details and style.
+This endpoint returns a JSON response containing all products in the database.
+
+#### Example Response
+
+json
+
+Copy
+
+[
+    {
+        "id": 1,
+        "name": "Product 1",
+        "description": "Description of Product 1",
+        "price": 19.99,
+        "stock": 100,
+        "image_url": "http://example.com/image1.jpg",
+        "seller_id": 1,
+        "category_id": 1,
+        "created_at": "2023-10-01T12:00:00"
+    },
+    {
+        "id": 2,
+        "name": "Product 2",
+        "description": "Description of Product 2",
+        "price": 29.99,
+        "stock": 50,
+        "image_url": "http://example.com/image2.jpg",
+        "seller_id": 2,
+        "category_id": 2,
+        "created_at": "2023-09-25T10:00:00"
+    },
+    ...
+]
+
+### GET `/latest`
+
+This endpoint returns a JSON response containing:
+- **Featured Products**: The latest 5 products added to the database, ordered by their creation date.
+- **Categories**: The top 5 categories in the database.
+- **Best Sellers**: The top 5 best-selling products based on the number of times they have been ordered.
+
+#### Example Response
+```json
+{
+    "featured_products": [
+        {
+            "id": 1,
+            "name": "Product 1",
+            "description": "Description of Product 1",
+            "price": 19.99,
+            "stock": 100,
+            "image_url": "http://example.com/image1.jpg",
+            "seller_id": 1,
+            "category_id": 1,
+            "created_at": "2023-10-01T12:00:00"
+        },
+        ...
+    ],
+    "categories": [
+        {
+            "id": 1,
+            "name": "Category 1",
+            "description": "Description of Category 1"
+        },
+        ...
+    ],
+    "best_sellers": [
+        {
+            "id": 2,
+            "name": "Product 2",
+            "description": "Description of Product 2",
+            "price": 29.99,
+            "stock": 50,
+            "image_url": "http://example.com/image2.jpg",
+            "seller_id": 2,
+            "category_id": 2,
+            "created_at": "2023-09-25T10:00:00"
+        },
+        ...
+    ]
+}
+
+
