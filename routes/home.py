@@ -8,7 +8,7 @@ from models import db  # Database instance
 
 home_bp = Blueprint("home", __name__)
 
-@home_bp.route("/", methods=["GET"])
+@home_bp.route("/latest", methods=["GET"])
 def homepage():# Fetch featured products (e.g., latest 5 products)
     featured_products = Product.query.order_by(Product.created_at.desc()).limit(5).all()
     
