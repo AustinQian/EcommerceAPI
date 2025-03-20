@@ -16,6 +16,8 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     email_verify = db.Column(db.Boolean, default=False)
     credits = db.Column(db.Float, default=0.0)
+    last_login_date = db.Column(db.DateTime, default=datetime.utcnow)  # Track last login
+    login_streak = db.Column(db.Integer, default=0)  # Track login streak
 
 
     def set_password(self, password):

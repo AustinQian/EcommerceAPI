@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
+from datetime import datetime, timedelta
 from models.product import Product  # Import product model
 from models.category import Category  # Import category model
 from models.order import Order  # Import order model (for best sellers)
@@ -54,5 +55,52 @@ def all_products():
             "created_at": product.created_at.isoformat() if product.created_at else None
         })
     return jsonify(product_list), 200
+
+
+@home_bp.route("/daily", methods=["POST"])
+def daily_login():
+    # Get user ID from the request (e.g., from authentication token)
+    user_id = request.json.get("user_id")
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Get the current date and the last login date
+    current_date = datetime.utcnow()
+    last_login_date = user.last_login_date
+
+    # Check if the user logged in yesterday (to maintain the streak)
+    if last_login_date and (current_date - last_login_date) <= timedelta(days=1):
+        # User logged in consecutively
+        user.login_streak += 1
+    else:
+        # Streak broken (more than 1 day since last login)
+        user.login_streak = 1  # Reset streak to 1
+
+    # Update the last login date
+    user.last_login_date = current_date
+
+    # Calculate the reward based on the streak
+    reward = calculate_reward(user.login_streak)
+
+    # Save changes to the database
+    db.session.commit()
+
+    # Return the response with the reward and streak
+    return jsonify({
+        "message": "Login successful",
+        "streak": user.login_streak,
+        "reward": reward
+    }), 200
+
+def calculate_reward(streak):
+    # Define reward logic based on the streak
+    if streak < 3:
+        return 10  # Small reward for short streaks
+    elif streak < 7:
+        return 50  # Medium reward for medium streaks
+    else:
+        return 100  # Large reward for long streaks
 
 
