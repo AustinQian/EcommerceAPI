@@ -503,6 +503,19 @@ You can test these endpoints using Postman:
 
 ---
 ## Home Route
+### POST `/daily`
+#### **Daily Login Reward**
+Record a daily login and calculate the login streak and reward.
+
+- **URL**: `/daily`\
+- **Request Body**:
+  ```json
+  {
+    "user_id": 1
+  }
+
+  
+
 ### GET `/home`
 
 This endpoint returns a JSON response containing all products in the database.
@@ -586,5 +599,3 @@ This endpoint returns a JSON response containing:
         ...
     ]
 }
-
-
