@@ -65,10 +65,15 @@ def daily_login():
 
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    # Initialize login_streak to 0 if it's NULL
+    if user.login_streak is None:
+        user.login_streak = 0
 
     # Get the current date and the last login date
     current_date = datetime.utcnow()
     last_login_date = user.last_login_date
+
 
     # Check if the user logged in yesterday (to maintain the streak)
     if last_login_date and (current_date - last_login_date) <= timedelta(days=1):
