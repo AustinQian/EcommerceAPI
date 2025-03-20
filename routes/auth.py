@@ -7,6 +7,7 @@ from flask_login import login_user
 from services.email_verification import generate_verification_token, send_verification_email, verify_verification_token
 from services.validation import is_valid_email, is_valid_password
 from services import generate_reset_token, send_reset_email, verify_reset_token
+from datetime import datetime, timedelta
 
 
 auth_bp = Blueprint("auth", __name__)
@@ -93,10 +94,17 @@ def login():
     
     if not user.email_verify:
         return jsonify({"error": "Email not verified. Please check your email."}), 403
+    
+    # Updated: Record user login time
+    user.last_login_date = datetime.utcnow()
+    db.session.commit()
 
     access_token = create_access_token(identity=user.id)
     login_user(user, remember=remember_me)
-    return jsonify({"access_token": access_token, "remember: ": remember_me}), 200
+    return jsonify({"access_token": access_token, 
+                    "remember: ": remember_me,
+                    "message": "Login successful",
+                    "user_id": user.id}), 200
 
 # Email verification route
 @auth_bp.route("/verify/<token>", methods=["GET"])

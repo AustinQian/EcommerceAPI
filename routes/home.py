@@ -59,8 +59,8 @@ def all_products():
 
 @home_bp.route("/daily", methods=["POST"])
 def daily_login():
-    # Get user ID from the request (e.g., from authentication token)
-    user_id = request.json.get("user_id")
+    data = request.get_json()
+    user_id = data.get("user_id")
     user = User.query.get(user_id)
 
     if not user:
@@ -78,9 +78,6 @@ def daily_login():
         # Streak broken (more than 1 day since last login)
         user.login_streak = 1  # Reset streak to 1
 
-    # Update the last login date
-    user.last_login_date = current_date
-
     # Calculate the reward based on the streak
     reward = calculate_reward(user.login_streak)
 
@@ -89,7 +86,7 @@ def daily_login():
 
     # Return the response with the reward and streak
     return jsonify({
-        "message": "Login successful",
+        "message": "Daily login recorded",
         "streak": user.login_streak,
         "reward": reward
     }), 200
