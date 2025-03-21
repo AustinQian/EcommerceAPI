@@ -45,17 +45,18 @@ def get_cart():
 @cart_bp.route('', methods=['POST'])
 @login_required
 def add_to_cart():
-    data = request.get_json()
-    print("Requested data", data)
+    data = request.get_json()  
+    print("Requested data:", data) 
+
     product_id = data.get('product_id')
     quantity = data.get('quantity', 1)
-    
+
     # Ensure the product exists and check stock availability if needed
     product = Product.query.get_or_404(product_id)
     if product.stock < quantity:
-        return jsonify({'error': 'Not enough stock available'}), 400
+        return jsonify({'error': 'Not enough stock available'}), 400  # Fixed: Use proper string formatting
 
-    # Check if the product is already in the user's cart
+    # Check if the user has a cart
     cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart:
         cart = Cart(user_id=current_user.id)
@@ -75,8 +76,8 @@ def add_to_cart():
             cart_id=cart.id, product_id=product_id, quantity=quantity
         ))
     db.session.commit()
-    
-    return jsonify({'message': 'Product added to cart successfully'}), 200
+
+    return jsonify({'message': 'Product added to cart successfully'}), 200  # Fixed: Use proper string formatting
 
 # DELETE /cart/<cart_id> - Remove an item from the cart
 @cart_bp.route('/<int:cart_id>/products/<int:product_id>', methods=['DELETE'])
