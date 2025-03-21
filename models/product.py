@@ -11,10 +11,9 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0)
     image_url = db.Column(db.String(255), nullable=True)
     seller_id = db.Column(db.Integer, db.ForeignKey("_user.id"), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False) 
+    category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
     seller = db.relationship("User", backref="products")
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
-
+    category = db.relationship("Category", backref="products")

@@ -8,6 +8,3 @@ class Category(db.Model):
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationship to Product: each Category can have many Products
-    products = db.relationship('Product', backref='category')

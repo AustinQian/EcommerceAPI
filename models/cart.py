@@ -1,13 +1,13 @@
 from models import db
-from .product import Product
 from .cart_product import CartProduct
 
 class Cart(db.Model):
+    __tablename__ = 'cart'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('_user.id'), nullable=False)
-    #products = db.relationship('Product', secondary=cart_product, backref='carts')
-    #product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    quantity = db.Column(db.Integer, default=1)
 
-    user = db.relationship("User", backref="cart_items")
-    product = db.relationship("Product", backref="cart_items")
+    # Use an association relationship to CartProduct objects
+    items = db.relationship("CartProduct", backref="cart", lazy=True)
+
+    # Associate the cart with its owner via a distinct backref name.
+    user = db.relationship("User", backref="carts")
