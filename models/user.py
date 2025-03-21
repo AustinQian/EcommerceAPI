@@ -32,8 +32,3 @@ class User(UserMixin, db.Model):
         return credits_earned
 
     
-    def __init__(self, username, email, password, credits=0.0):
-        self.username = username
-        self.email = email
-        self.password = password
-        self.credits = credits
