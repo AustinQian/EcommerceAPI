@@ -76,9 +76,11 @@ def add_to_cart():
         association.quantity += quantity
     else:
         # Add the product to the cart
-        db.session.execute(cart_product.insert().values(
+        insert_stmt = cart_product.insert().values(
             cart_id=cart.id, product_id=product_id, quantity=quantity
-        ))
+        )
+        print("Executing SQL:", insert_stmt)  # Debugging: Log the SQL statement
+        db.session.execute(insert_stmt)
     db.session.commit()
 
     return jsonify({'message': 'Product added to cart successfully'}), 200  # Fixed: Use proper string formatting
