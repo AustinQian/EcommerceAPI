@@ -56,6 +56,23 @@ def all_products():
         })
     return jsonify(product_list), 200
 
+# Route to retrieve all categories
+@home_bp.route("/categories", methods=["GET"])
+def get_categories():
+    # Fetch all categories from the database
+    categories = Category.query.all()
+    
+    # Format the response
+    category_list = []
+    for category in categories:
+        category_list.append({
+            "id": category.id,
+            "name": category.name,
+            "description": category.description
+        })
+    
+    return jsonify(category_list), 200
+
 
 @home_bp.route("/daily", methods=["POST"])
 def daily_login():
