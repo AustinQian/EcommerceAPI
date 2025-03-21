@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from models.cart import Cart
 from models.product import Product
-from models.relation import cart_product
+from models.cart_product import CartProduct
 from models import db
 
 cart_bp = Blueprint('cart_bp', __name__, url_prefix='/cart')
@@ -29,14 +29,14 @@ def get_cart():
     if not cart:
         return jsonify([]), 200
     
-    cart_items = db.session.query(cart_product).filter_by(cart_id=cart.id).all()
+    cart_items = CartProduct.query.filter_by(cart_id=cart.id).all()
     results = []
     for item in cart_items:
         results.append({
-            'cart_id': item.id,
+            'cart_id': item.cart_id,
             'product_id': item.product_id,
             'quantity': item.quantity,
-            'product_name': item.product.name,
+            'product_name': item.product.name,  
             'price': item.product.price
         })
     return jsonify(results), 200
@@ -68,19 +68,12 @@ def add_to_cart():
         db.session.commit()
 
     # Check if the product is already in the cart
-    association = db.session.query(cart_product).filter_by(
-        cart_id=cart.id, product_id=product_id
-    ).first()
+    association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
     if association:
-        # Update quantity if the product is already in the cart
         association.quantity += quantity
     else:
-        # Add the product to the cart
-        insert_stmt = cart_product.insert().values(
-            cart_id=cart.id, product_id=product_id, quantity=quantity
-        )
-        print("Executing SQL:", insert_stmt)  # Debugging: Log the SQL statement
-        db.session.execute(insert_stmt)
+        new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
+        db.session.add(new_assoc)
     db.session.commit()
 
     return jsonify({'message': 'Product added to cart successfully'}), 200  # Fixed: Use proper string formatting
@@ -92,9 +85,7 @@ def remove_from_cart(cart_id, product_id):
     # Ensure the cart belongs to the current user
     cart = Cart.query.filter_by(id=cart_id, user_id=current_user.id).first_or_404()
 
-    db.session.execute(cart_product.delete().where(
-        (cart_product.c.cart_id == cart_id) & (cart_product.c.product_id == product_id)
-    ))
+    CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).delete()
     db.session.commit()
     return jsonify({'message': 'Item removed from cart'}), 200
 
@@ -110,7 +101,7 @@ def checkout():
     if not cart:
         return jsonify({'message': 'Cart is empty'}), 400
     
-    cart_items = db.session.query(cart_product).filter_by(cart_id=cart.id).all()
+    cart_items = db.session.query(CartProduct).filter_by(cart_id=cart.id).all()
     if not cart_items:
         return jsonify({'message': 'Cart is empty'}), 400
 
@@ -139,12 +130,10 @@ def checkout():
     for item in cart_items:
         product = Product.query.get(item.product_id)
         product.stock -= item.quantity
-        db.session.execute(cart_product.delete().where(
-            (cart_product.c.cart_id == cart.id) & (cart_product.c.product_id == item.product_id)
-        ))
+        # Remove the association via ORM
+        CartProduct.query.filter_by(cart_id=cart.id, product_id=item.product_id).delete()
 
     credits_earned = current_user.award_credits(total_price)
-
     db.session.commit()
 
     return jsonify({
@@ -179,7 +168,7 @@ def apply_coupon():
     if not cart:
         return jsonify({"error": "Cart is empty"}), 400
     
-    cart_items = db.session.query(cart_product).filter_by(cart_id=cart.id).all()
+    cart_items = db.session.query(CartProduct).filter_by(cart_id=cart.id).all()
     if not cart_items:
         return jsonify({"error": "Cart is empty"}), 400
 
