@@ -369,6 +369,8 @@ All endpoints require the user to be authenticated. Ensure your request includes
 - **Session-based Authentication**:  
   Postman will handle cookies if enabled.
 
+All API end points are based on this base url: `https://yourdomain.com/api/cart`
+
 ## Endpoints
 
 ### GET /cart
@@ -388,7 +390,7 @@ All endpoints require the user to be authenticated. Ensure your request includes
           "price": 19.99
       },
       {
-          "cart_id": 2,
+          "cart_id": 1,
           "product_id": 102,
           "quantity": 1,
           "product_name": "Product B",
@@ -418,10 +420,10 @@ All endpoints require the user to be authenticated. Ensure your request includes
   }
   ```
 
-### DELETE /cart/<cart_id>
+### DELETE /cart/<int:cart_id>/products/<int:product_id>
 - **Description**: Removes a specific item from the cart.
 - **Method**: DELETE
-- **URL**: `/cart/<cart_id>`
+- **URL**: `/cart/<int:cart_id>/products/<int:product_id>`
 - **Headers**:
   - `Authorization: Bearer <your_token>`
 - **Response Example (200 OK)**:
@@ -458,6 +460,30 @@ All endpoints require the user to be authenticated. Ensure your request includes
       "remaining_credits": 40.0
   }
   ```
+### POST /cart/apply-coupon**
+Apply a coupon code to the cart to receive a discount.
+- **Description**: Applies coupon to cart
+- **URL**: `/cart/apply-coupon`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "coupon_code": "P1Q8"
+  }
+  ```
+
+- **Response Example (200 ok)**:
+```json
+{
+  "message": "Coupon applied successfully",
+  "original_total": 50.0,
+  "discount_percentage": 15,
+  "discount_amount": 7.5,
+  "new_total": 42.5
+}
+```
+
+  
 
 ### POST /cart/apply-credits
 - **Description**: Applies user credits to reduce the total price of the items in the cart without performing a full checkout.
