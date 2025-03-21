@@ -51,6 +51,10 @@ def add_to_cart():
     product_id = data.get('product_id')
     quantity = data.get('quantity', 1)
 
+    print("Extracted product_id:", product_id)  # Debugging: Log the extracted product_id
+    print("Extracted quantity:", quantity)  # Debugging: Log the extracted quantity
+
+    
     # Ensure the product exists and check stock availability if needed
     product = Product.query.get_or_404(product_id)
     if product.stock < quantity:
