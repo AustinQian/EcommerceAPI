@@ -46,6 +46,7 @@ def get_cart():
 @login_required
 def add_to_cart():
     data = request.get_json()
+    print("Requested data", data)
     product_id = data.get('product_id')
     quantity = data.get('quantity', 1)
     
