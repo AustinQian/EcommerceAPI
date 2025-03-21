@@ -19,7 +19,7 @@ def verify_reset_token(token, expiration=3600):  # Token expires in 1 hour
         return None
     
 def send_reset_email(email, token):
-    reset_link = str(f"http://127.0.0.1:5000/api/auth/reset_password/{token}")
+    reset_link = str(f"https://ecommerceapi-production-48c7.up.railway.app/api/auth/reset_password/{token}")
     
     msg = Message(
         subject="Password Reset Request",
