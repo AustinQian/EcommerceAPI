@@ -45,28 +45,19 @@ def get_cart():
 @cart_bp.route('', methods=['POST'])
 @login_required
 def add_to_cart():
-    data = request.get_json()  
-    print("Requested data:", data) 
-
+    data = request.get_json() 
     product_id = data.get('product_id')
     quantity = data.get('quantity', 1)
-
-    print("Extracted product_id:", product_id)  # Debugging: Log the extracted product_id
-    print("Extracted quantity:", quantity)  # Debugging: Log the extracted quantity
-
-    
     # Ensure the product exists and check stock availability if needed
     product = Product.query.get_or_404(product_id)
     if product.stock < quantity:
         return jsonify({'error': 'Not enough stock available'}), 400  # Fixed: Use proper string formatting
-
     # Check if the user has a cart
     cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart:
         cart = Cart(user_id=current_user.id)
         db.session.add(cart)
         db.session.commit()
-
     # Check if the product is already in the cart
     association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
     if association:
