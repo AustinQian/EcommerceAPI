@@ -548,9 +548,7 @@ This endpoint returns a JSON response containing all products in the database.
 
 #### Example Response
 
-json
-
-Copy
+```json
 
 [
     {
@@ -577,6 +575,31 @@ Copy
     },
     ...
 ]
+```
+### GET `/categories`
+
+This endpoint returns a JSON response containing all categories
+
+#### Example Response
+
+```json
+
+[
+    {
+        "id": 1,
+        "name": "Product 1",
+        "description": "Description of Product 1",
+        "created_at": "2023-10-01T12:00:00"
+    },
+    {
+        "id": 2,
+        "name": "Product 2",
+        "description": "Description of Product 2",
+        "created_at": "2023-09-25T10:00:00"
+    },
+    ...
+]
+```
 
 ### GET `/latest`
 
@@ -625,3 +648,4 @@ This endpoint returns a JSON response containing:
         ...
     ]
 }
+```
