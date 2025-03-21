@@ -1,6 +1,6 @@
 TO use this API, run `pip install reuqirements.txt` and configure your database
 
-# Authentication API Documentation
+# API Documentation
 
 This document describes the endpoints provided by the authentication API. The API handles user registration, login, email verification, and password reset functionality.
 
@@ -8,14 +8,14 @@ This document describes the endpoints provided by the authentication API. The AP
 
 ## Base URL
 
-- **Production:** `https://yourdomain.com/api/auth`
-- **Development:** `http://localhost:5000/api/auth`
+- **Production:** `https://yourdomain.com/`
+- **Development:** `http://localhost:5000/`
 
-All endpoints are prefixed with `/api/auth`.
 
 ---
 
-## Endpoints
+## Authentication Endpoints
+All endpoints in Authentication Endpoints are prefixed with `/api/auth`.
 
 ### 1. Register User
 
@@ -248,10 +248,11 @@ The Group Buying Discounts feature allows users to get a lower price when enough
 - **Automatic Discount Application**: When the threshold is met, discounts are applied at checkout.
 - **User Tracking**: Keeps record of who has joined each group buy.
 
+All Group buy Endpoints are prefixed with `/api`
 ### Endpoints
 
 1. **Create a Group Buy**
-   - **URL**: `POST /api/groupbuy`
+   - **URL**: `POST /groupbuy`
    - **Description**: Creates a new group buy for a product.  
    - **Request Body** (JSON):
      ```json
@@ -271,7 +272,7 @@ The Group Buying Discounts feature allows users to get a lower price when enough
      ```
 
 2. **Retrieve a Group Buy**
-   - **URL**: `GET /api/groupbuy/<unique_link>`
+   - **URL**: `GET /groupbuy/<unique_link>`
    - **Description**: Fetches details of a group buy by its unique link.
    - **Response** (200 OK):
      ```json
@@ -287,7 +288,7 @@ The Group Buying Discounts feature allows users to get a lower price when enough
      ```
 
 3. **Join a Group Buy**
-   - **URL**: `POST /api/groupbuy/join/<unique_link>`
+   - **URL**: `POST /groupbuy/join/<unique_link>`
    - **Description**: Lets an authenticated user join a group buy. Increments participant count.
    - **Response** (200 OK):
      ```json
@@ -297,7 +298,7 @@ The Group Buying Discounts feature allows users to get a lower price when enough
      ```
 
 4. **Apply Group Buy Discount**
-   - **URL**: `POST /api/groupbuy/apply-discount/<cart_id>`
+   - **URL**: `POST /groupbuy/apply-discount/<cart_id>`
    - **Description**: Applies the discount to the specified cart item if the minimum participant threshold is met.
    - **Request Body** (JSON):
      ```json
@@ -369,14 +370,14 @@ All endpoints require the user to be authenticated. Ensure your request includes
 - **Session-based Authentication**:  
   Postman will handle cookies if enabled.
 
-All API end points are based on this base url: `https://yourdomain.com/api/cart`
+All API end points are prefixed with: `/api`
 
 ## Endpoints
 
-### GET /cart
-- **Description**: Retrieves the current user's cart items.
-- **Method**: GET
+### GET Cart
 - **URL**: `/cart`
+- **Method**: GET
+- **Description**: Retrieves the current user's cart items.
 - **Headers**:
   - `Authorization: Bearer <your_token>`
 - **Response Example (200 OK)**:
@@ -400,9 +401,9 @@ All API end points are based on this base url: `https://yourdomain.com/api/cart`
   ```
 
 ### POST /cart
-- **Description**: Adds a product to the cart or updates its quantity if it already exists.
-- **Method**: POST
 - **URL**: `/cart`
+- **Method**: POST
+- **Description**: Adds a product to the cart or updates its quantity if it already exists.
 - **Headers**:
   - `Content-Type: application/json`
   - `Authorization: Bearer <your_token>`
@@ -421,9 +422,9 @@ All API end points are based on this base url: `https://yourdomain.com/api/cart`
   ```
 
 ### DELETE /cart/<int:cart_id>/products/<int:product_id>
-- **Description**: Removes a specific item from the cart.
-- **Method**: DELETE
 - **URL**: `/cart/<int:cart_id>/products/<int:product_id>`
+- **Method**: DELETE
+- **Description**: Removes a specific item from the cart.
 - **Headers**:
   - `Authorization: Bearer <your_token>`
 - **Response Example (200 OK)**:
@@ -434,14 +435,14 @@ All API end points are based on this base url: `https://yourdomain.com/api/cart`
   ```
 
 ### POST /cart/checkout
+- **URL**: `/cart/checkout`
+- **Method**: POST
 - **Description**: Processes the checkout for all items in the cart. This endpoint:
   - Validates that the cart is not empty.
   - Optionally applies user credits to reduce the total price.
   - Checks product stock and deducts stock accordingly.
   - Clears the cart.
   - Awards credits based on the purchase amount.
-- **Method**: POST
-- **URL**: `/cart/checkout`
 - **Headers**:
   - `Content-Type: application/json`
   - `Authorization: Bearer <your_token>`
@@ -462,9 +463,9 @@ All API end points are based on this base url: `https://yourdomain.com/api/cart`
   ```
 ### POST /cart/apply-coupon**
 Apply a coupon code to the cart to receive a discount.
-- **Description**: Applies coupon to cart
 - **URL**: `/cart/apply-coupon`
 - **Method**: `POST`
+- **Description**: Applies coupon to cart
 - **Request Body**:
   ```json
   {
@@ -486,9 +487,9 @@ Apply a coupon code to the cart to receive a discount.
   
 
 ### POST /cart/apply-credits
-- **Description**: Applies user credits to reduce the total price of the items in the cart without performing a full checkout.
-- **Method**: POST
 - **URL**: `/cart/apply-credits`
+- **Method**: POST
+- **Description**: Applies user credits to reduce the total price of the items in the cart without performing a full checkout.
 - **Headers**:
   - `Content-Type: application/json`
   - `Authorization: Bearer <your_token>`
@@ -528,12 +529,16 @@ You can test these endpoints using Postman:
 *Note*: Make sure your server is running and that you have valid authentication tokens to access these endpoints.
 
 ---
-## Home Route
+
+# Home Route
+
+All endpoints are prefixed with `/`
+## Endpoints
 ### POST `/daily`
 #### **Daily Login Reward**
-Record a daily login and calculate the login streak and reward.
-
-- **URL**: `/daily`\
+- **URL**: `/daily`
+- **Method**: POST
+- **Description**: Record a daily login and calculate the login streak and reward.
 - **Request Body**:
   ```json
   {
@@ -543,8 +548,9 @@ Record a daily login and calculate the login streak and reward.
   
 
 ### GET `/home`
-
-This endpoint returns a JSON response containing all products in the database.
+- **URL**: `/home`
+- **Method**: GET
+- **Description**:This endpoint returns a JSON response containing all products in the database.
 
 #### Example Response
 
@@ -577,8 +583,9 @@ This endpoint returns a JSON response containing all products in the database.
 ]
 ```
 ### GET `/categories`
-
-This endpoint returns a JSON response containing all categories
+- **URL**: `/categories`
+- **Method**: GET
+- **Description**: This endpoint returns a JSON response containing all categories
 
 #### Example Response
 
@@ -603,7 +610,9 @@ This endpoint returns a JSON response containing all categories
 
 ### GET `/latest`
 
-This endpoint returns a JSON response containing:
+- **URL**: `/latest`
+- **Method**: GET
+- **Description**: This endpoint returns a JSON response containing:
 - **Featured Products**: The latest 5 products added to the database, ordered by their creation date.
 - **Categories**: The top 5 categories in the database.
 - **Best Sellers**: The top 5 best-selling products based on the number of times they have been ordered.
