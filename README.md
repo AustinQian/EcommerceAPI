@@ -221,7 +221,7 @@ All endpoints in Authentication Endpoints are prefixed with `/api/auth`.
 
 # Group Buying Discounts API
 
-This API enables users to create, join, and apply discounts through a “group buying” mechanism. When enough participants join a group buy, the discount is activated and applied to the product’s price in the user’s cart.
+This API enables users to create, join, and apply discounts through a "group buying" mechanism. When enough participants join a group buy, the discount is activated and applied to the product's price in the user's cart.
 
 ---
 
@@ -240,7 +240,7 @@ This API enables users to create, join, and apply discounts through a “group b
 ## Group Buying Discounts
 
 ### Overview
-The Group Buying Discounts feature allows users to get a lower price when enough participants join a shared purchase. A unique link is generated for each group buy, enabling users to invite friends. Once the minimum participant threshold is reached, the discount is activated and applied to the product’s price in the user’s cart.
+The Group Buying Discounts feature allows users to get a lower price when enough participants join a shared purchase. A unique link is generated for each group buy, enabling users to invite friends. Once the minimum participant threshold is reached, the discount is activated and applied to the product's price in the user's cart.
 
 ### Key Features
 - **Unique Invitation Link**: Each group buy generates a short, shareable link.
@@ -336,193 +336,200 @@ All Group buy Endpoints are prefixed with `/api`
 ---
 # Cart Blueprint Documentation
 
-This document provides detailed documentation for the Cart Blueprint of our e-commerce application. The Cart Blueprint manages all cart-related actions such as adding items, retrieving cart items, removing items, checking out, and applying user credits.
+This document provides detailed documentation for the Cart Blueprint of our e-commerce application. The Cart Blueprint manages all cart-related actions such as adding items, retrieving cart items, removing items, checking out, and applying coupons.
 
 ## Table of Contents
 1. [Overview](#overview)
 2. [Authentication](#authentication)
 3. [Endpoints](#endpoints)
-    - [GET /cart](#get-cart)
-    - [POST /cart](#post-cart)
-    - [DELETE /cart/<cart_id>](#delete-cart)
-    - [POST /cart/checkout](#post-cartcheckout)
-    - [POST /cart/apply-credits](#post-cartapply-credits)
 4. [Error Handling](#error-handling)
 5. [Usage Examples](#usage-examples)
 
 ## Overview
 The Cart Blueprint provides the following functionalities:
-- **Retrieve Cart Items**: Get all items currently in the user's cart.
-- **Add to Cart**: Add a product to the cart or update the quantity if it already exists.
-- **Remove from Cart**: Remove a specific cart item.
-- **Checkout**: Finalize the purchase by:
-  - Validating cart items and product stock,
-  - Optionally applying credits to reduce the total price,
-  - Deducting product stock,
-  - Clearing the cart, and
-  - Awarding credits based on the purchase amount.
-- **Apply Credits**: Optionally reduce the cart total by applying available user credits.
+- Retrieve cart items with optional category filtering
+- Add/update products in cart
+- Remove products from cart
+- Process checkout with optional credit application
+- Apply discount coupons
+- Manage stock levels automatically
 
 ## Authentication
-All endpoints require the user to be authenticated. Ensure your request includes the appropriate authentication headers:
-- **JWT Authentication**:  
-  Include the header `Authorization: Bearer <your_token>`.
-- **Session-based Authentication**:  
-  Postman will handle cookies if enabled.
+All endpoints require user authentication using Flask-Login. Ensure your requests include valid session credentials.
 
-All API end points are prefixed with: `/api`
+All API endpoints are prefixed with: `/cart`
 
 ## Endpoints
 
-### GET Cart
-- **URL**: `/cart`
-- **Method**: GET
-- **Description**: Retrieves the current user's cart items.
-- **Headers**:
-  - `Authorization: Bearer <your_token>`
-- **Response Example (200 OK)**:
-  ```json
-  [
-      {
-          "cart_id": 1,
-          "product_id": 101,
-          "quantity": 2,
-          "product_name": "Product A",
-          "price": 19.99
-      },
-      {
-          "cart_id": 1,
-          "product_id": 102,
-          "quantity": 1,
-          "product_name": "Product B",
-          "price": 29.99
-      }
-  ]
-  ```
+### GET /cart
+Retrieves all items in the user's cart with optional category filtering.
+
+**Query Parameters:**
+- `category` (optional): Filter items by product category
+
+**Response (200 OK):**
+```json
+[
+    {
+        "cart_id": 1,
+        "product_id": 101,
+        "quantity": 2,
+        "product_name": "Product A",
+        "price": 19.99,
+        "image_url": "http://example.com/image.jpg",
+        "category": "Electronics",
+        "stock": 50
+    }
+]
+```
 
 ### POST /cart
-- **URL**: `/cart`
-- **Method**: POST
-- **Description**: Adds a product to the cart or updates its quantity if it already exists.
-- **Headers**:
-  - `Content-Type: application/json`
-  - `Authorization: Bearer <your_token>`
-- **Request Body Example**:
-  ```json
-  {
-      "product_id": 101,
-      "quantity": 2
-  }
-  ```
-- **Response Example (200 OK)**:
-  ```json
-  {
-      "message": "Product added to cart successfully"
-  }
-  ```
+Add a product to cart or update quantity if already exists.
 
-### DELETE /cart/<int:cart_id>/products/<int:product_id>
-- **URL**: `/cart/<int:cart_id>/products/<int:product_id>`
-- **Method**: DELETE
-- **Description**: Removes a specific item from the cart.
-- **Headers**:
-  - `Authorization: Bearer <your_token>`
-- **Response Example (200 OK)**:
-  ```json
-  {
-      "message": "Item removed from cart"
-  }
-  ```
-
-### POST /cart/checkout
-- **URL**: `/cart/checkout`
-- **Method**: POST
-- **Description**: Processes the checkout for all items in the cart. This endpoint:
-  - Validates that the cart is not empty.
-  - Optionally applies user credits to reduce the total price.
-  - Checks product stock and deducts stock accordingly.
-  - Clears the cart.
-  - Awards credits based on the purchase amount.
-- **Headers**:
-  - `Content-Type: application/json`
-  - `Authorization: Bearer <your_token>`
-- **Request Body Example (Optional Credits Application)**:
-  ```json
-  {
-      "credits_to_apply": 10.0
-  }
-  ```
-- **Response Example (200 OK)**:
-  ```json
-  {
-      "message": "Checkout successful",
-      "final_total": 90.0,
-      "credits_earned": 4.5,
-      "remaining_credits": 40.0
-  }
-  ```
-### POST /cart/apply-coupon**
-Apply a coupon code to the cart to receive a discount.
-- **URL**: `/cart/apply-coupon`
-- **Method**: `POST`
-- **Description**: Applies coupon to cart
-- **Request Body**:
-  ```json
-  {
-    "coupon_code": "P1Q8"
-  }
-  ```
-
-- **Response Example (200 ok)**:
+**Request Body:**
 ```json
 {
-  "message": "Coupon applied successfully",
-  "original_total": 50.0,
-  "discount_percentage": 15,
-  "discount_amount": 7.5,
-  "new_total": 42.5
+    "product_id": 101,
+    "quantity": 2
 }
 ```
 
-  
+**Response (200 OK):**
+```json
+{
+    "message": "Product added to cart successfully"
+}
+```
 
-### POST /cart/apply-credits
-- **URL**: `/cart/apply-credits`
-- **Method**: POST
-- **Description**: Applies user credits to reduce the total price of the items in the cart without performing a full checkout.
-- **Headers**:
-  - `Content-Type: application/json`
-  - `Authorization: Bearer <your_token>`
-- **Request Body Example**:
-  ```json
-  {
-      "credits_to_apply": 15.0
-  }
-  ```
-- **Response Example (200 OK)**:
-  ```json
-  {
-      "message": "Credits applied successfully",
-      "old_total": 100.0,
-      "new_total": 85.0,
-      "credits_used": 15.0,
-      "remaining_credits": 35.0
-  }
-  ```
+**Error Response (400 Bad Request):**
+```json
+{
+    "error": "Not enough stock available"
+}
+```
+
+### DELETE /cart/<cart_id>/products/<product_id>
+Remove a specific product from the cart.
+
+**Response (200 OK):**
+```json
+{
+    "message": "Item removed from cart"
+}
+```
+
+### POST /cart/checkout
+Process checkout with optional credit application.
+
+**Request Body:**
+```json
+{
+    "credits_to_apply": 50.0  // Optional
+}
+```
+
+**Response (200 OK):**
+```json
+{
+    "message": "Checkout successful",
+    "final_total": 149.99,
+    "credits_earned": 15,
+    "remaining_credits": 35
+}
+```
+
+**Error Responses:**
+```json
+{
+    "error": "Not enough credits"
+}
+```
+or
+```json
+{
+    "error": "Not enough stock for Product Name. Available: X"
+}
+```
+
+### POST /cart/apply-coupon
+Apply a discount coupon to the cart.
+
+**Request Body:**
+```json
+{
+    "coupon_code": "P1Q8"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+    "message": "Coupon applied successfully",
+    "original_total": 100.00,
+    "discount_percentage": 15,
+    "discount_amount": 15.00,
+    "new_total": 85.00
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+    "error": "Invalid coupon code"
+}
+```
+or
+```json
+{
+    "error": "This coupon is expired"
+}
+```
 
 ## Error Handling
-The API returns clear error messages with appropriate HTTP status codes:
-- **400 Bad Request**: For cases like insufficient stock, empty cart, or insufficient credits.
-- **401 Unauthorized**: When authentication is missing or invalid.
-- **404 Not Found**: If the requested product or cart item does not exist.
+The API uses standard HTTP status codes:
+- `400 Bad Request`: Invalid input, insufficient stock, or business rule violation
+- `401 Unauthorized`: Missing or invalid authentication
+- `404 Not Found`: Resource not found
+- `500 Internal Server Error`: Server-side error
 
 ## Usage Examples
-You can test these endpoints using Postman:
-1. **GET /cart**: Retrieve your current cart items.
-2. **POST /cart**: Add a product by sending JSON with `product_id` and `quantity`.
-3. **DELETE /cart/{cart_id}**: Remove an item from your cart.
-4. **POST /cart/checkout**: Finalize your order; optionally include `"credits_to_apply"` to reduce your total.
-5. **POST /cart/apply-credits**: Apply credits to see the updated cart total without checking out.
+
+### 1. Get Cart Items with Category Filter
+```bash
+curl -X GET 'http://localhost:5000/cart?category=Electronics' \
+  -H 'Authorization: Bearer your_token'
+```
+
+### 2. Add Item to Cart
+```bash
+curl -X POST 'http://localhost:5000/cart' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer your_token' \
+  -d '{
+    "product_id": 101,
+    "quantity": 2
+  }'
+```
+
+### 3. Apply Coupon
+```bash
+curl -X POST 'http://localhost:5000/cart/apply-coupon' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer your_token' \
+  -d '{
+    "coupon_code": "P1Q8"
+  }'
+```
+
+### 4. Checkout with Credits
+```bash
+curl -X POST 'http://localhost:5000/cart/checkout' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer your_token' \
+  -d '{
+    "credits_to_apply": 50.0
+  }'
+```
 
 ---
 
@@ -544,10 +551,9 @@ All endpoints are prefixed with `/`
   {
     "user_id": 1
   }
+  ```
 
-  
-
-### GET `/home`
+### GET `/home`
 - **URL**: `/home`
 - **Method**: GET
 - **Description**:This endpoint returns a JSON response containing all products in the database.
@@ -555,7 +561,6 @@ All endpoints are prefixed with `/`
 #### Example Response
 
 ```json
-
 [
     {
         "id": 1,
@@ -590,7 +595,6 @@ All endpoints are prefixed with `/`
 #### Example Response
 
 ```json
-
 [
     {
         "id": 1,
@@ -658,3 +662,149 @@ All endpoints are prefixed with `/`
     ]
 }
 ```
+
+# NEOMART E-commerce API Documentation
+
+## Cart API Endpoints
+
+### Get Cart Items
+```http
+GET /cart
+```
+Retrieves all items in the user's cart.
+
+**Query Parameters:**
+- `category` (optional): Filter items by product category
+
+**Response:**
+```json
+[
+  {
+    "cart_id": 1,
+    "product_id": 123,
+    "quantity": 2,
+    "product_name": "Product Name",
+    "price": 99.99,
+    "image_url": "http://example.com/image.jpg",
+    "category": "Electronics",
+    "stock": 50
+  }
+]
+```
+
+### Add to Cart
+```http
+POST /cart
+```
+Add a product to the cart or update quantity if already in cart.
+
+**Request Body:**
+```json
+{
+  "product_id": 123,
+  "quantity": 1
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Product added to cart successfully"
+}
+```
+
+### Remove from Cart
+```http
+DELETE /cart/<cart_id>/products/<product_id>
+```
+Remove a specific product from the cart.
+
+**Response:**
+```json
+{
+  "message": "Item removed from cart"
+}
+```
+
+### Checkout
+```http
+POST /cart/checkout
+```
+Process checkout for all items in cart.
+
+**Request Body:**
+```json
+{
+  "credits_to_apply": 50.0  // Optional
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Checkout successful",
+  "final_total": 149.99,
+  "credits_earned": 15,
+  "remaining_credits": 35
+}
+```
+
+### Apply Coupon
+```http
+POST /cart/apply-coupon
+```
+Apply a discount coupon to the cart.
+
+**Request Body:**
+```json
+{
+  "coupon_code": "P1Q8"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Coupon applied successfully",
+  "original_total": 100.00,
+  "discount_percentage": 15,
+  "discount_amount": 15.00,
+  "new_total": 85.00
+}
+```
+
+## Error Responses
+
+All endpoints may return the following error responses:
+
+- `400 Bad Request`: Invalid input or business rule violation
+- `401 Unauthorized`: User not authenticated
+- `404 Not Found`: Resource not found
+- `500 Internal Server Error`: Server-side error
+
+Common error response format:
+```json
+{
+  "error": "Error message description"
+}
+```
+
+## Authentication
+
+All cart endpoints require user authentication using Flask-Login. Requests must include valid session credentials.
+
+## Features
+
+- **Product Management**: Add, remove, and update quantities of products in cart
+- **Category Filtering**: Filter cart items by product category
+- **Credit System**: Apply and earn credits during checkout
+- **Coupon System**: Apply discount coupons to reduce total price
+- **Stock Management**: Automatic stock validation and updates during checkout
+- **Error Handling**: Comprehensive error checking and appropriate responses
+
+## Dependencies
+
+- Flask
+- Flask-Login
+- SQLAlchemy
+- Python 3.x

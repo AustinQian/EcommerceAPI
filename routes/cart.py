@@ -25,11 +25,16 @@ COUPONS = {
 @cart_bp.route('', methods=['GET'])
 @login_required
 def get_cart():
+    category = request.args.get('category')
     cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart:
         return jsonify([]), 200
     
-    cart_items = CartProduct.query.filter_by(cart_id=cart.id).all()
+    query = CartProduct.query.filter_by(cart_id=cart.id)
+    if category:
+        query = query.join(Product).filter(Product.category == category)
+    
+    cart_items = query.all()
     results = []
     for item in cart_items:
         results.append({
@@ -37,7 +42,10 @@ def get_cart():
             'product_id': item.product_id,
             'quantity': item.quantity,
             'product_name': item.product.name,  
-            'price': item.product.price
+            'price': item.product.price,
+            'image_url': item.product.image_url,
+            'category': item.product.category,
+            'stock': item.product.stock
         })
     return jsonify(results), 200
 
