@@ -68,32 +68,36 @@ def homepage() -> tuple[Dict[str, Any], int]:
         return jsonify({"error": "Database error occurred"}), 500
 
 @home_bp.route("/home", methods=["GET"])
-def all_products() -> tuple[Dict[str, Any], int]:
-    """
-    Get all products with pagination.
-    
-    Query Parameters:
-        page (int): Page number (default: 1)
-        per_page (int): Items per page (default: 20)
-    
-    Returns:
-        tuple: (JSON response, HTTP status code)
-    """
+def all_products():
     try:
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
+        # Get category filter from query parameters
+        category_id = request.args.get('category', type=int)
         
-        pagination = Product.query.paginate(page=page, per_page=per_page, error_out=False)
-        products = pagination.items
+        # Base query
+        query = Product.query
         
-        return jsonify({
-            "products": [serialize_product(product) for product in products],
-            "total": pagination.total,
-            "pages": pagination.pages,
-            "current_page": page
-        }), 200
-    except SQLAlchemyError as e:
-        return jsonify({"error": "Database error occurred"}), 500
+        # Apply category filter if provided
+        if category_id:
+            query = query.filter_by(category_id=category_id)
+        
+        products = query.all()
+        product_list = []
+        for product in products:
+            product_list.append({
+                "id": product.id,
+                "name": product.name,
+                "description": product.description,
+                "price": product.price,
+                "stock": product.stock,
+                "image_url": product.image_url,
+                "seller_id": product.seller_id,
+                "category_id": product.category_id,
+                "category_name": product.category.name if product.category else None,
+                "created_at": product.created_at.isoformat() if product.created_at else None
+            })
+        return jsonify(product_list), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Route to retrieve all categories
 @home_bp.route("/categories", methods=["GET"])

@@ -223,115 +223,178 @@ All endpoints in Authentication Endpoints are prefixed with `/api/auth`.
 
 This API enables users to create, join, and apply discounts through a "group buying" mechanism. When enough participants join a group buy, the discount is activated and applied to the product's price in the user's cart.
 
----
+## Endpoints
 
-## Table of Contents
+### GET /groupbuy/products
+Get list of products available for group buy.
 
-1. [Create a Group Buy](#create-a-group-buy)
-2. [Retrieve a Group Buy](#retrieve-a-group-buy)
-3. [Join a Group Buy](#join-a-group-buy)
-4. [Apply Group Buy Discount](#apply-group-buy-discount)
-5. [Models](#models)
-6. [Authentication](#authentication)
-7. [Error Handling](#error-handling)
+**Response (200 OK):**
+```json
+[
+    {
+        "id": 1,
+        "name": "Product Name",
+        "description": "Product Description",
+        "price": 99.99,
+        "stock": 50,
+        "image_url": "http://example.com/image.jpg",
+        "category": "Electronics"
+    }
+]
+```
 
----
+### POST /groupbuy/create
+Create a new group buy for an existing product.
 
-## Group Buying Discounts
+**Request Body:**
+```json
+{
+    "product_id": 1,
+    "min_participants": 5,
+    "discount_percentage": 15.0,
+    "end_date": "2024-12-31T23:59:59"  // Optional
+}
+```
 
-### Overview
-The Group Buying Discounts feature allows users to get a lower price when enough participants join a shared purchase. A unique link is generated for each group buy, enabling users to invite friends. Once the minimum participant threshold is reached, the discount is activated and applied to the product's price in the user's cart.
+**Response (201 Created):**
+```json
+{
+    "message": "Group buy created successfully",
+    "group_buy": {
+        "id": 1,
+        "product_id": 1,
+        "product_name": "Product Name",
+        "min_participants": 5,
+        "current_participants": 0,
+        "discount_percentage": 15.0,
+        "unique_link": "abc123",
+        "end_date": "2024-12-31T23:59:59",
+        "status": "active"
+    }
+}
+```
 
-### Key Features
-- **Unique Invitation Link**: Each group buy generates a short, shareable link.
-- **Minimum Participants**: A required number of users must join to activate the discount.
-- **Automatic Discount Application**: When the threshold is met, discounts are applied at checkout.
-- **User Tracking**: Keeps record of who has joined each group buy.
+**Error Responses:**
+```json
+{
+    "error": "Missing required field: product_id"
+}
+```
+or
+```json
+{
+    "error": "Discount percentage must be between 0 and 100"
+}
+```
+or
+```json
+{
+    "error": "Minimum participants must be at least 2"
+}
+```
 
-All Group buy Endpoints are prefixed with `/api`
-### Endpoints
+### GET /groupbuy/<unique_link>
+Get details of a specific group buy.
 
-1. **Create a Group Buy**
-   - **URL**: `POST /groupbuy`
-   - **Description**: Creates a new group buy for a product.  
-   - **Request Body** (JSON):
-     ```json
-     {
-       "product_id": 1,
-       "discount_percentage": 10,
-       "min_participants": 5
-     }
-     ```
-   - **Response** (201 Created):
-     ```json
-     {
-       "message": "Group buy created",
-       "group_buy_id": 1,
-       "unique_link": "b1234f8e"
-     }
-     ```
+**Response (200 OK):**
+```json
+{
+    "id": 1,
+    "product_id": 123,
+    "product_name": "Product Name",
+    "min_participants": 5,
+    "current_participants": 2,
+    "discount_percentage": 15.0,
+    "unique_link": "abc123",
+    "end_date": "2024-12-31T23:59:59",
+    "status": "active"
+}
+```
 
-2. **Retrieve a Group Buy**
-   - **URL**: `GET /groupbuy/<unique_link>`
-   - **Description**: Fetches details of a group buy by its unique link.
-   - **Response** (200 OK):
-     ```json
-     {
-       "id": 1,
-       "product_id": 123,
-       "discount_percentage": 10,
-       "min_participants": 5,
-       "current_participants": 2,
-       "unique_link": "b1234f8e",
-       "is_active": true
-     }
-     ```
+### POST /groupbuy/join/<unique_link>
+Join an existing group buy.
 
-3. **Join a Group Buy**
-   - **URL**: `POST /groupbuy/join/<unique_link>`
-   - **Description**: Lets an authenticated user join a group buy. Increments participant count.
-   - **Response** (200 OK):
-     ```json
-     {
-       "message": "Joined group buy successfully"
-     }
-     ```
+**Response (200 OK):**
+```json
+{
+    "message": "Joined group buy successfully",
+    "current_participants": 3
+}
+```
 
-4. **Apply Group Buy Discount**
-   - **URL**: `POST /groupbuy/apply-discount/<cart_id>`
-   - **Description**: Applies the discount to the specified cart item if the minimum participant threshold is met.
-   - **Request Body** (JSON):
-     ```json
-     {
-       "group_buy_id": 1
-     }
-     ```
-   - **Response** (200 OK):
-     ```json
-     {
-       "message": "Discount applied to cart item",
-       "original_price": 100.0,
-       "discounted_price": 90.0
-     }
-     ```
+### POST /groupbuy/apply-discount/<cart_id>
+Apply group buy discount to cart.
 
+**Request Body:**
+```json
+{
+    "group_buy_id": 1
+}
+```
 
-### Example Flow
-1. **Seller/Admin** creates a group buy for a product (e.g., 10% off if 5 users join).  
-2. **Unique Link** is generated (e.g., `b1234f8e`).  
-3. **Users** share this link and join via `POST /api/groupbuy/join/<unique_link>`.  
-4. Once the minimum participant threshold is reached, the discount is activated.  
-5. **Users** can then apply the discount to their cart at checkout using `POST /api/groupbuy/apply-discount/<cart_id>`.
+**Response (200 OK):**
+```json
+{
+    "message": "Discount applied successfully",
+    "original_price": 100.00,
+    "discounted_price": 85.00,
+    "discount_percentage": 15.0
+}
+```
 
-### Authentication & Security
-- Endpoints that require the user to be logged in use session-based or JWT-based authentication.  
-- If a user is not authenticated, the server returns a `401 Unauthorized` error for protected routes.
+## Features
 
-### Error Handling
-- **400 Bad Request**: Missing fields, insufficient participants, or invalid data.  
-- **401 Unauthorized**: User not authenticated when trying to join or apply discounts.  
-- **404 Not Found**: Invalid group buy link or non-existent resource.  
+- **Product Selection**: Choose from existing in-stock products
+- **Customizable Discount**: Set your own discount percentage (0-100%)
+- **Flexible Participation**: Set minimum number of participants (minimum 2)
+- **Time Limit**: Optional end date for the group buy
+- **Real-time Updates**: Track current number of participants
+- **Unique Links**: Shareable links for each group buy
+- **Status Tracking**: Monitor group buy status (active/expired/completed)
 
+## Error Handling
+
+- `400 Bad Request`: Invalid input parameters
+- `401 Unauthorized`: User not authenticated
+- `404 Not Found`: Product or group buy not found
+- `500 Internal Server Error`: Server-side error
+
+## Example Usage
+
+1. **Get Available Products:**
+```bash
+curl -X GET 'http://localhost:5000/groupbuy/products' \
+  -H 'Authorization: Bearer your_token'
+```
+
+2. **Create Group Buy:**
+```bash
+curl -X POST 'http://localhost:5000/groupbuy/create' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer your_token' \
+  -d '{
+    "product_id": 1,
+    "min_participants": 5,
+    "discount_percentage": 15.0,
+    "end_date": "2024-12-31T23:59:59"
+  }'
+```
+
+3. **Join Group Buy:**
+```bash
+curl -X POST 'http://localhost:5000/groupbuy/join/abc123' \
+  -H 'Authorization: Bearer your_token'
+```
+
+4. **Apply Discount:**
+```bash
+curl -X POST 'http://localhost:5000/groupbuy/apply-discount/1' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer your_token' \
+  -d '{
+    "group_buy_id": 1
+  }'
+```
 
 ---
 # Cart Blueprint Documentation
@@ -365,7 +428,7 @@ All API endpoints are prefixed with: `/cart`
 Retrieves all items in the user's cart with optional category filtering.
 
 **Query Parameters:**
-- `category` (optional): Filter items by product category
+- `category` (optional): Filter items by category ID (e.g., `/cart?category=1` for Electronics)
 
 **Response (200 OK):**
 ```json
@@ -381,6 +444,24 @@ Retrieves all items in the user's cart with optional category filtering.
         "stock": 50
     }
 ]
+```
+
+**Error Response (500 Internal Server Error):**
+```json
+{
+    "error": "Error message description"
+}
+```
+
+**Example Usage:**
+```bash
+# Get all cart items
+curl -X GET 'http://localhost:5000/cart' \
+  -H 'Authorization: Bearer your_token'
+
+# Get cart items filtered by category (e.g., Electronics with category_id=1)
+curl -X GET 'http://localhost:5000/cart?category=1' \
+  -H 'Authorization: Bearer your_token'
 ```
 
 ### POST /cart
@@ -556,10 +637,12 @@ All endpoints are prefixed with `/`
 ### GET `/home`
 - **URL**: `/home`
 - **Method**: GET
-- **Description**:This endpoint returns a JSON response containing all products in the database.
+- **Description**: Returns all products in the database with optional category filtering.
+
+**Query Parameters:**
+- `category` (optional): Filter products by category ID (e.g., `/home?category=1` for Electronics)
 
 #### Example Response
-
 ```json
 [
     {
@@ -571,6 +654,7 @@ All endpoints are prefixed with `/`
         "image_url": "http://example.com/image1.jpg",
         "seller_id": 1,
         "category_id": 1,
+        "category_name": "Electronics",
         "created_at": "2023-10-01T12:00:00"
     },
     {
@@ -582,11 +666,28 @@ All endpoints are prefixed with `/`
         "image_url": "http://example.com/image2.jpg",
         "seller_id": 2,
         "category_id": 2,
+        "category_name": "Clothing",
         "created_at": "2023-09-25T10:00:00"
-    },
-    ...
+    }
 ]
 ```
+
+**Error Response (500 Internal Server Error):**
+```json
+{
+    "error": "Error message description"
+}
+```
+
+**Example Usage:**
+```bash
+# Get all products
+curl -X GET 'http://localhost:5000/home'
+
+# Get products filtered by category (e.g., Electronics with category_id=1)
+curl -X GET 'http://localhost:5000/home?category=1'
+```
+
 ### GET `/categories`
 - **URL**: `/categories`
 - **Method**: GET
