@@ -142,15 +142,21 @@ def add_to_cart():
         
         # Check if the product is already in the cart
         try:
+            final_quantity = quantity  # Initialize final quantity
             association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
             if association:
                 print(f"Updating existing cart item. Old quantity: {association.quantity}")
                 association.quantity += quantity
-                print(f"New quantity: {association.quantity}")
+                final_quantity = association.quantity
+                print(f"New quantity: {final_quantity}")
             else:
                 print("Adding new product to cart")
                 new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
                 db.session.add(new_assoc)
+            
+            # Check if the final quantity exceeds available stock
+            if final_quantity > product.stock:
+                return jsonify({'error': 'Not enough stock available for the total quantity'}), 400
             
             db.session.commit()
             print("Cart updated successfully")
@@ -159,7 +165,7 @@ def add_to_cart():
                 'message': 'Product added to cart successfully',
                 'cart_id': cart.id,
                 'product_id': product_id,
-                'quantity': quantity if not association else association.quantity
+                'quantity': final_quantity
             }), 200
             
         except Exception as e:

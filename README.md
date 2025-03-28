@@ -451,14 +451,14 @@ Retrieve items in the user's cart.
 - 500 Internal Server Error: `{"error": "Failed to retrieve cart", "message": "error details"}`
 
 ### POST /cart
-Add a product to the cart or update quantity if already in cart.
+Add a product to the cart. If the product already exists in the cart, the quantity will be increased by the specified amount.
 
 **Request Body:**
 ```json
 {
   "email": "user@example.com",
   "product_id": 123,
-  "quantity": 1
+  "quantity": 1  // Optional, defaults to 1
 }
 ```
 
@@ -468,7 +468,7 @@ Add a product to the cart or update quantity if already in cart.
   "message": "Product added to cart successfully",
   "cart_id": 1,
   "product_id": 123,
-  "quantity": 1
+  "quantity": 2  // Total quantity after adding (includes existing quantity if product was already in cart)
 }
 ```
 
@@ -477,8 +477,8 @@ Add a product to the cart or update quantity if already in cart.
 - 400 Bad Request: `{"error": "product_id is required"}`
 - 400 Bad Request: `{"error": "quantity must be a positive integer"}`
 - 400 Bad Request: `{"error": "Invalid email"}`
-- 404 Not Found: `{"error": "Product not found"}`
 - 400 Bad Request: `{"error": "Not enough stock available"}`
+- 404 Not Found: `{"error": "Product not found"}`
 - 500 Internal Server Error: `{"error": "Failed to add product to cart", "message": "error details"}`
 
 ### DELETE /cart/{cart_id}/products/{product_id}
@@ -486,6 +486,13 @@ Remove a product from the cart.
 
 **Query Parameters:**
 - `email` (required): User's email address
+
+**Alternative: Request Body (if not using query parameters):**
+```json
+{
+  "email": "user@example.com"
+}
+```
 
 **Response (200 OK):**
 ```json
@@ -495,8 +502,11 @@ Remove a product from the cart.
 ```
 
 **Error Responses:**
+- 400 Bad Request: `{"error": "Email is required"}`
 - 400 Bad Request: `{"error": "Invalid email"}`
-- 404 Not Found: When cart or product not found
+- 404 Not Found: `{"error": "Cart not found"}`
+- 404 Not Found: `{"error": "Product not found in cart"}`
+- 500 Internal Server Error: `{"error": "Failed to remove item from cart", "message": "error details"}`
 
 ### POST /cart/checkout
 Checkout the cart and create an order.
@@ -505,7 +515,7 @@ Checkout the cart and create an order.
 ```json
 {
   "email": "user@example.com",
-  "credits_to_apply": 0.0  // optional
+  "credits_to_apply": 0.0  // Optional
 }
 ```
 
@@ -804,141 +814,129 @@ curl -X GET 'http://localhost:5000/product/1'
 
 # NEOMART E-commerce API Documentation
 
-## Cart API Endpoints
+## Cart API
 
-### Base URL
-- Production: `https://ecommerceapi-production-48c7.up.railway.app/api`
-- Development: `http://localhost:5000/api`
+### Base URLs
+- Production: https://ecommerceapi-production-48c7.up.railway.app/api
+- Development: http://localhost:5000/api
 
-### GET /cart
-Retrieve items in the user's cart.
+### Endpoints
+
+#### GET /cart
+Retrieves all items in the user's cart.
 
 **Query Parameters:**
 - `email` (required): User's email address
 
-**Response (200 OK):**
+**Response:**
 ```json
-[
-  {
+{
+    "cart_items": [
+        {
+            "cart_id": 1,
+            "product_id": 2,
+            "quantity": 3,
+            "product_name": "Example Product",
+            "price": 29.99,
+            "image_url": "https://example.com/image.jpg",
+            "stock": 10
+        }
+    ]
+}
+```
+
+#### POST /cart
+Adds a product to the cart or updates the quantity if the product already exists.
+
+**Request Body:**
+```json
+{
+    "product_id": 2,
+    "quantity": 1,
+    "email": "user@example.com"
+}
+```
+
+**Important Notes:**
+- If the product already exists in the cart, the new quantity will be ADDED to the existing quantity
+- The total quantity (existing + new) cannot exceed the product's available stock
+- The response includes the TOTAL quantity after the addition
+- All quantities must be positive integers
+
+**Response:**
+```json
+{
+    "message": "Product added to cart successfully",
     "cart_id": 1,
-    "product_id": 123,
-    "quantity": 2,
-    "product_name": "Sample Product",
-    "price": 29.99,
-    "image_url": "https://example.com/image.jpg",
-    "stock": 50
-  }
-]
-```
-
-**Error Responses:**
-- 400 Bad Request: `{"error": "Email is required"}`
-- 400 Bad Request: `{"error": "Invalid email"}`
-- 500 Internal Server Error: `{"error": "Failed to retrieve cart", "message": "error details"}`
-
-### POST /cart
-Add a product to the cart or update quantity if already in cart.
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "product_id": 123,
-  "quantity": 1
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "message": "Product added to cart successfully",
-  "cart_id": 1,
-  "product_id": 123,
-  "quantity": 1
+    "product_id": 2,
+    "quantity": 3  // This is the total quantity after addition
 }
 ```
 
 **Error Responses:**
-- 400 Bad Request: `{"error": "No JSON data provided"}`
-- 400 Bad Request: `{"error": "product_id is required"}`
-- 400 Bad Request: `{"error": "quantity must be a positive integer"}`
-- 400 Bad Request: `{"error": "Invalid email"}`
-- 404 Not Found: `{"error": "Product not found"}`
-- 400 Bad Request: `{"error": "Not enough stock available"}`
-- 500 Internal Server Error: `{"error": "Failed to add product to cart", "message": "error details"}`
+- 400: Invalid request (missing fields, invalid email, insufficient stock)
+- 404: Product not found
+- 500: Server error
 
-### DELETE /cart/{cart_id}/products/{product_id}
-Remove a product from the cart.
+#### DELETE /cart/{cart_id}/products/{product_id}
+Removes a product from the cart.
 
 **Query Parameters:**
 - `email` (required): User's email address
 
-**Response (200 OK):**
+**Response:**
 ```json
 {
-  "message": "Item removed from cart"
+    "message": "Product removed from cart successfully"
 }
 ```
 
-**Error Responses:**
-- 400 Bad Request: `{"error": "Invalid email"}`
-- 404 Not Found: When cart or product not found
-
-### POST /cart/checkout
-Checkout the cart and create an order.
+#### POST /cart/checkout
+Process checkout for the cart.
 
 **Request Body:**
 ```json
 {
-  "email": "user@example.com",
-  "credits_to_apply": 0.0  // optional
+    "email": "user@example.com",
+    "credits_to_apply": 10.00  // Optional
 }
 ```
 
-**Response (200 OK):**
+**Response:**
 ```json
 {
-  "message": "Checkout successful",
-  "final_total": 59.98,
-  "credits_earned": 5.99,
-  "remaining_credits": 10.00
+    "message": "Checkout successful",
+    "order_id": 123,
+    "total": 89.99
 }
 ```
 
-**Error Responses:**
-- 400 Bad Request: `{"error": "Invalid email"}`
-- 400 Bad Request: `{"error": "Cart is empty"}`
-- 400 Bad Request: `{"error": "Not enough credits"}`
-- 400 Bad Request: `{"error": "Not enough stock for Product Name. Available: X"}`
-
-### POST /cart/apply-coupon
+#### POST /cart/apply-coupon
 Apply a coupon code to the cart.
 
 **Request Body:**
 ```json
 {
-  "email": "user@example.com",
-  "coupon_code": "P1Q8"
+    "email": "user@example.com",
+    "coupon_code": "SAVE20"
 }
 ```
 
-**Response (200 OK):**
+**Response:**
 ```json
 {
-  "message": "Coupon applied successfully",
-  "original_total": 100.00,
-  "discount_percentage": 15,
-  "discount_amount": 15.00,
-  "new_total": 85.00
+    "message": "Coupon applied successfully",
+    "discount": 20.00,
+    "new_total": 79.99
 }
 ```
 
-**Error Responses:**
-- 400 Bad Request: `{"error": "Invalid email"}`
-- 400 Bad Request: `{"error": "Invalid coupon code"}`
-- 400 Bad Request: `{"error": "This coupon is expired"}`
-- 400 Bad Request: `{"error": "This coupon has already been used"}`
-- 400 Bad Request: `{"error": "Cart is empty"}`
+### General Notes
+- All monetary values are in USD
+- Email verification is required for all cart operations
+- Stock is checked in real-time for all cart operations
+- Quantities must be positive integers
+- The API will return appropriate error messages for any validation failures
 
 ## Error Responses
 
