@@ -66,44 +66,64 @@ def get_cart():
 @cart_bp.route('', methods=['POST'])
 @jwt_required()
 def add_to_cart():
-    data = request.get_json() 
-    product_id = data.get('product_id')
-    quantity = data.get('quantity', 1)
-    email = data.get('email')
-    
-    if not verify_user_email(email):
-        return jsonify({'error': 'Invalid email verification'}), 400
-    
-    user_id = get_jwt_identity()
-    
-    # Ensure the product exists and check stock availability if needed
-    product = Product.query.get_or_404(product_id)
-    if product.stock < quantity:
-        return jsonify({'error': 'Not enough stock available'}), 400
-    
-    # Check if the user has a cart
-    cart = Cart.query.filter_by(user_id=user_id).first()
-    if not cart:
-        cart = Cart(user_id=user_id)
-        db.session.add(cart)
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+            
+        # Validate required fields
+        product_id = data.get('product_id')
+        if not product_id:
+            return jsonify({'error': 'product_id is required'}), 400
+            
+        quantity = data.get('quantity', 1)
+        if not isinstance(quantity, int) or quantity < 1:
+            return jsonify({'error': 'quantity must be a positive integer'}), 400
+            
+        email = data.get('email')
+        if not email:
+            return jsonify({'error': 'email is required'}), 400
+        
+        if not verify_user_email(email):
+            return jsonify({'error': 'Invalid email verification'}), 400
+        
+        user_id = get_jwt_identity()
+        
+        # Ensure the product exists and check stock availability if needed
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'error': 'Product not found'}), 404
+            
+        if product.stock < quantity:
+            return jsonify({'error': 'Not enough stock available'}), 400
+        
+        # Check if the user has a cart
+        cart = Cart.query.filter_by(user_id=user_id).first()
+        if not cart:
+            cart = Cart(user_id=user_id)
+            db.session.add(cart)
+            db.session.commit()
+        
+        # Check if the product is already in the cart
+        association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+        if association:
+            association.quantity += quantity
+        else:
+            new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
+            db.session.add(new_assoc)
+        
         db.session.commit()
-    
-    # Check if the product is already in the cart
-    association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
-    if association:
-        association.quantity += quantity
-    else:
-        new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
-        db.session.add(new_assoc)
-    
-    db.session.commit()
 
-    return jsonify({
-        'message': 'Product added to cart successfully',
-        'cart_id': cart.id,
-        'product_id': product_id,
-        'quantity': quantity
-    }), 200
+        return jsonify({
+            'message': 'Product added to cart successfully',
+            'cart_id': cart.id,
+            'product_id': product_id,
+            'quantity': quantity
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 # DELETE /cart/<cart_id> - Remove an item from the cart
 @cart_bp.route('/<int:cart_id>/products/<int:product_id>', methods=['DELETE'])
