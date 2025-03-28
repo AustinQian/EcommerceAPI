@@ -229,10 +229,6 @@ def search_products():
         category = request.args.get('category', type=int)
         min_price = request.args.get('min_price', type=float)
         max_price = request.args.get('max_price', type=float)
-        sort_by = request.args.get('sort_by', 'name')  # name, price, created_at
-        order = request.args.get('order', 'asc')  # asc, desc
-        page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 10, type=int)
 
         # Build the base query
         base_query = Product.query
@@ -256,17 +252,8 @@ def search_products():
         if max_price is not None:
             base_query = base_query.filter(Product.price <= max_price)
 
-        # Apply sorting
-        if sort_by == 'price':
-            base_query = base_query.order_by(Product.price.desc() if order == 'desc' else Product.price.asc())
-        elif sort_by == 'created_at':
-            base_query = base_query.order_by(Product.created_at.desc() if order == 'desc' else Product.created_at.asc())
-        else:  # default to name
-            base_query = base_query.order_by(Product.name.desc() if order == 'desc' else Product.name.asc())
-
-        # Apply pagination
-        pagination = base_query.paginate(page=page, per_page=per_page, error_out=False)
-        products = pagination.items
+        # Get all matching products
+        products = base_query.all()
 
         # Format the response
         results = []
@@ -283,14 +270,7 @@ def search_products():
                 'created_at': product.created_at.isoformat() if product.created_at else None
             })
 
-        return jsonify({
-            'products': results,
-            'total': pagination.total,
-            'pages': pagination.pages,
-            'current_page': page,
-            'has_next': pagination.has_next,
-            'has_prev': pagination.has_prev
-        }), 200
+        return jsonify(results), 200
 
     except Exception as e:
         print(f"Error in search_products: {str(e)}")

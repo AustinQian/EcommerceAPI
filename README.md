@@ -813,40 +813,29 @@ curl -X GET 'http://localhost:5000/product/1'
 ```
 
 ### GET `/search`
-Search for products with various filters and sorting options.
+Search for products with basic filters.
 
 **Query Parameters:**
 - `q` (optional): Search query string to match against product name and description
 - `category` (optional): Filter by category ID
 - `min_price` (optional): Minimum price filter
 - `max_price` (optional): Maximum price filter
-- `sort_by` (optional): Field to sort by (name, price, created_at). Default: name
-- `order` (optional): Sort order (asc, desc). Default: asc
-- `page` (optional): Page number for pagination. Default: 1
-- `per_page` (optional): Number of items per page. Default: 10
 
 **Response:**
 ```json
-{
-    "products": [
-        {
-            "id": 1,
-            "name": "Product Name",
-            "description": "Product Description",
-            "price": 99.99,
-            "stock": 50,
-            "image_url": "http://example.com/image.jpg",
-            "category_id": 1,
-            "category_name": "Electronics",
-            "created_at": "2024-03-15T10:30:00"
-        }
-    ],
-    "total": 100,
-    "pages": 10,
-    "current_page": 1,
-    "has_next": true,
-    "has_prev": false
-}
+[
+    {
+        "id": 1,
+        "name": "Product Name",
+        "description": "Product Description",
+        "price": 99.99,
+        "stock": 50,
+        "image_url": "http://example.com/image.jpg",
+        "category_id": 1,
+        "category_name": "Electronics",
+        "created_at": "2024-03-15T10:30:00"
+    }
+]
 ```
 
 **Error Response:**
@@ -864,32 +853,18 @@ curl -X GET 'http://localhost:5000/search?q=laptop'
 
 # Search with filters
 curl -X GET 'http://localhost:5000/search?q=laptop&category=1&min_price=500&max_price=1000'
-
-# Search with sorting
-curl -X GET 'http://localhost:5000/search?q=laptop&sort_by=price&order=desc'
-
-# Search with pagination
-curl -X GET 'http://localhost:5000/search?q=laptop&page=2&per_page=20'
-
-# Complex search with all parameters
-curl -X GET 'http://localhost:5000/search?q=laptop&category=1&min_price=500&max_price=1000&sort_by=price&order=desc&page=2&per_page=20'
 ```
 
 **Features:**
 - Full-text search in product name and description
 - Category filtering
 - Price range filtering
-- Multiple sorting options
-- Pagination support
 - Case-insensitive search
-- Flexible parameter combinations
 
 **Notes:**
 - All parameters are optional
 - Search is case-insensitive
 - Price filters accept decimal values
-- Pagination starts from 1
-- Maximum items per page is 100
 
 # NEOMART E-commerce API Documentation
 
