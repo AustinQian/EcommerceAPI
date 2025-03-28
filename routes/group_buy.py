@@ -136,38 +136,36 @@ def get_group_buy(unique_link):
 
 @groupbuy_bp.route('/join/<unique_link>', methods=['POST'])
 def join_group_buy(unique_link):
-    # Join a group buy using the unique link.
-    group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
-    if not group_buy:
-        return jsonify({'error': 'Group buy not found'}), 404
+    """Join a group buy using the unique link."""
+    try:
+        # Find the group buy
+        group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
+        if not group_buy:
+            return jsonify({'error': 'Group buy not found'}), 404
 
-    if not group_buy.is_active:
-        return jsonify({'error': 'Group buy is no longer active'}), 400
+        # Check if group buy is still active
+        if not group_buy.is_active:
+            return jsonify({'error': 'Group buy is no longer active'}), 400
 
-    # Check if user already joined
-    existing_participant = GroupBuyParticipant.query.filter_by(
-        group_buy_id=group_buy.id,
-        user_id=current_user.id
-    ).first()
-    if existing_participant:
-        return jsonify({'message': 'You have already joined this group buy'}), 200
+        # Increment participants
+        group_buy.current_participants += 1
 
-    # Add participant
-    participant = GroupBuyParticipant(
-        group_buy_id=group_buy.id,
-        user_id=current_user.id
-    )
-    db.session.add(participant)
-    group_buy.current_participants += 1
+        # If we reached min_participants, activate the group buy
+        if group_buy.current_participants >= group_buy.min_participants:
+            group_buy.is_active = True
 
-    # If we reached min_participants, we can mark group buy as "activated"
-    if group_buy.current_participants >= group_buy.min_participants:
-        # You can do more logic here, e.g., mark group_buy as "activated"
-        # so the discount can be applied.
-        pass
-
-    db.session.commit()
-    return jsonify({'message': 'Joined group buy successfully'}), 200
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Joined group buy successfully',
+            'current_participants': group_buy.current_participants,
+            'min_participants': group_buy.min_participants,
+            'is_active': group_buy.is_active
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to join group buy: {str(e)}'}), 500
 
 @groupbuy_bp.route('/apply-discount/<int:cart_id>', methods=['POST'])
 def apply_group_buy_discount(cart_id):
