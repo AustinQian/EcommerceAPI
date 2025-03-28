@@ -32,34 +32,60 @@ def verify_user_email(email):
 # GET /cart - Retrieve the current user's cart items
 @cart_bp.route('', methods=['GET'])
 def get_cart():
-    email = request.args.get('email')
-    user = verify_user_email(email)
-    if not user:
-        return jsonify({'error': 'Invalid email'}), 400
+    try:
+        print("Received GET request for cart")
+        email = request.args.get('email')
+        print(f"Email from request: {email}")
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+            
+        user = verify_user_email(email)
+        if not user:
+            return jsonify({'error': 'Invalid email'}), 400
+        print(f"User verified: {user.id}")
 
-    category = request.args.get('category')
-    cart = Cart.query.filter_by(user_id=user.id).first()
-    if not cart:
-        return jsonify([]), 200
-    
-    query = CartProduct.query.filter_by(cart_id=cart.id)
-    if category:
-        query = query.join(Product).filter(Product.category == category)
-    
-    cart_items = query.all()
-    results = []
-    for item in cart_items:
-        results.append({
-            'cart_id': item.cart_id,
-            'product_id': item.product_id,
-            'quantity': item.quantity,
-            'product_name': item.product.name,  
-            'price': item.product.price,
-            'image_url': item.product.image_url,
-            'category': item.product.category,
-            'stock': item.product.stock
-        })
-    return jsonify(results), 200
+        cart = Cart.query.filter_by(user_id=user.id).first()
+        if not cart:
+            print(f"No cart found for user {user.id}")
+            return jsonify([]), 200
+        print(f"Cart found: {cart.id}")
+        
+        try:
+            cart_items = CartProduct.query.filter_by(cart_id=cart.id).all()
+            print(f"Found {len(cart_items)} items in cart")
+            
+            results = []
+            for item in cart_items:
+                product = Product.query.get(item.product_id)
+                if product:
+                    results.append({
+                        'cart_id': cart.id,
+                        'product_id': product.id,
+                        'quantity': item.quantity,
+                        'product_name': product.name,  
+                        'price': product.price,
+                        'image_url': product.image_url,
+                        'stock': product.stock
+                    })
+                else:
+                    print(f"Warning: Product {item.product_id} not found for cart item")
+            
+            return jsonify(results), 200
+            
+        except Exception as e:
+            print(f"Error querying cart items: {str(e)}")
+            return jsonify({
+                'error': 'Failed to retrieve cart items',
+                'message': str(e)
+            }), 500
+            
+    except Exception as e:
+        print(f"Unexpected error in get_cart: {str(e)}")
+        return jsonify({
+            'error': 'Failed to retrieve cart',
+            'message': str(e)
+        }), 500
 
 # POST /cart - Add a product to the cart (or update quantity if already in cart)
 @cart_bp.route('', methods=['POST'])
