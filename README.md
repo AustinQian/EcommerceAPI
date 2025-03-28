@@ -8,14 +8,14 @@ This document describes the endpoints provided by the authentication API. The AP
 
 ## Base URL
 
-- **Production:** `https://yourdomain.com/`
-- **Development:** `http://localhost:5000/`
+- **Production:** `https://yourdomain.com/api` except home API
+- **Development:** `http://localhost:5000/api`
 
 
 ---
 
 ## Authentication Endpoints
-All endpoints in Authentication Endpoints are prefixed with `/api/auth`.
+All endpoints in Authentication Endpoints are prefixed with `/auth`.
 
 ### 1. Register User
 
@@ -418,7 +418,7 @@ The Cart Blueprint provides the following functionalities:
 - Manage stock levels automatically
 
 ## Authentication
-All endpoints require user authentication using Flask-Login. Ensure your requests include valid session credentials.
+All endpoints require user authentication using JWT tokens. Ensure your requests include the Authorization header with a valid JWT token.
 
 All API endpoints are prefixed with: `/cart`
 
