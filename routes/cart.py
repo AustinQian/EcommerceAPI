@@ -65,9 +65,15 @@ def get_cart():
 @cart_bp.route('', methods=['POST'])
 def add_to_cart():
     try:
+        # Log incoming request data
+        print("Received request data:", request.get_json())
+        
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No JSON data provided'}), 400
+            
+        # Log parsed data
+        print("Parsed request data:", data)
             
         # Validate required fields
         product_id = data.get('product_id')
@@ -79,14 +85,17 @@ def add_to_cart():
             return jsonify({'error': 'quantity must be a positive integer'}), 400
             
         email = data.get('email')
+        print(f"Attempting to verify email: {email}")
         user = verify_user_email(email)
         if not user:
             return jsonify({'error': 'Invalid email'}), 400
+        print(f"User verified: {user.id}")
         
         # Ensure the product exists and check stock availability
         product = Product.query.get(product_id)
         if not product:
             return jsonify({'error': 'Product not found'}), 404
+        print(f"Product found: {product.id}, Stock: {product.stock}")
             
         if product.stock < quantity:
             return jsonify({'error': 'Not enough stock available'}), 400
@@ -94,29 +103,51 @@ def add_to_cart():
         # Check if the user has a cart
         cart = Cart.query.filter_by(user_id=user.id).first()
         if not cart:
+            print(f"Creating new cart for user {user.id}")
             cart = Cart(user_id=user.id)
             db.session.add(cart)
-            db.session.commit()
+            try:
+                db.session.commit()
+                print("New cart created successfully")
+            except Exception as e:
+                print(f"Error creating cart: {str(e)}")
+                db.session.rollback()
+                return jsonify({'error': 'Failed to create cart', 'message': str(e)}), 500
         
         # Check if the product is already in the cart
-        association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
-        if association:
-            association.quantity += quantity
-        else:
-            new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
-            db.session.add(new_assoc)
-        
-        db.session.commit()
+        try:
+            association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+            if association:
+                print(f"Updating existing cart item. Old quantity: {association.quantity}")
+                association.quantity += quantity
+                print(f"New quantity: {association.quantity}")
+            else:
+                print("Adding new product to cart")
+                new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
+                db.session.add(new_assoc)
+            
+            db.session.commit()
+            print("Cart updated successfully")
 
-        return jsonify({
-            'message': 'Product added to cart successfully',
-            'cart_id': cart.id,
-            'product_id': product_id,
-            'quantity': quantity
-        }), 200
+            return jsonify({
+                'message': 'Product added to cart successfully',
+                'cart_id': cart.id,
+                'product_id': product_id,
+                'quantity': quantity if not association else association.quantity
+            }), 200
+            
+        except Exception as e:
+            print(f"Error updating cart: {str(e)}")
+            db.session.rollback()
+            return jsonify({
+                'error': 'Failed to update cart',
+                'message': str(e)
+            }), 500
         
     except Exception as e:
-        db.session.rollback()
+        print(f"Unexpected error in add_to_cart: {str(e)}")
+        if 'db' in locals():
+            db.session.rollback()
         return jsonify({
             'error': 'Failed to add product to cart',
             'message': str(e)
