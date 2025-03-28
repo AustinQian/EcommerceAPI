@@ -179,20 +179,65 @@ def add_to_cart():
             'message': str(e)
         }), 500
 
-# DELETE /cart/<cart_id> - Remove an item from the cart
+# DELETE /cart/<cart_id>/products/<product_id> - Remove an item from the cart
 @cart_bp.route('/<int:cart_id>/products/<int:product_id>', methods=['DELETE'])
 def remove_from_cart(cart_id, product_id):
-    email = request.args.get('email')
-    user = verify_user_email(email)
-    if not user:
-        return jsonify({'error': 'Invalid email'}), 400
+    try:
+        print(f"Attempting to remove product {product_id} from cart {cart_id}")
+        
+        # Get email from query parameters or JSON body
+        email = request.args.get('email')
+        if not email:
+            data = request.get_json()
+            if data:
+                email = data.get('email')
+        
+        print(f"Email from request: {email}")
+        
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+            
+        user = verify_user_email(email)
+        if not user:
+            return jsonify({'error': 'Invalid email'}), 400
+        print(f"User verified: {user.id}")
 
-    # Ensure the cart belongs to the current user
-    cart = Cart.query.filter_by(id=cart_id, user_id=user.id).first_or_404()
+        # Ensure the cart belongs to the current user
+        cart = Cart.query.filter_by(id=cart_id, user_id=user.id).first()
+        if not cart:
+            print(f"Cart {cart_id} not found for user {user.id}")
+            return jsonify({'error': 'Cart not found'}), 404
+        print(f"Cart found: {cart.id}")
 
-    CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).delete()
-    db.session.commit()
-    return jsonify({'message': 'Item removed from cart'}), 200
+        # Check if the product exists in the cart
+        cart_product = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+        if not cart_product:
+            print(f"Product {product_id} not found in cart {cart.id}")
+            return jsonify({'error': 'Product not found in cart'}), 404
+        print(f"Found product {product_id} in cart")
+
+        try:
+            CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).delete()
+            db.session.commit()
+            print(f"Successfully removed product {product_id} from cart {cart.id}")
+            return jsonify({'message': 'Item removed from cart'}), 200
+            
+        except Exception as e:
+            print(f"Error removing product from cart: {str(e)}")
+            db.session.rollback()
+            return jsonify({
+                'error': 'Failed to remove item from cart',
+                'message': str(e)
+            }), 500
+            
+    except Exception as e:
+        print(f"Unexpected error in remove_from_cart: {str(e)}")
+        if 'db' in locals():
+            db.session.rollback()
+        return jsonify({
+            'error': 'Failed to process request',
+            'message': str(e)
+        }), 500
 
 # POST /cart/checkout - Checkout all items in the cart
 @cart_bp.route('/checkout', methods=['POST'])

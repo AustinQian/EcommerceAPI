@@ -425,176 +425,134 @@ All API endpoints are prefixed with: `/cart`
 ## Endpoints
 
 ### GET /cart
-Retrieves all items in the user's cart with optional category filtering.
+Retrieve items in the user's cart.
 
 **Query Parameters:**
-- `category` (optional): Filter items by category ID (e.g., `/cart?category=1` for Electronics)
-- `email` (required): User's email for verification
+- `email` (required): User's email address
 
 **Response (200 OK):**
 ```json
 [
-    {
-        "cart_id": 1,
-        "product_id": 101,
-        "quantity": 2,
-        "product_name": "Product A",
-        "price": 19.99,
-        "image_url": "http://example.com/image.jpg",
-        "category": "Electronics",
-        "stock": 50
-    }
+  {
+    "cart_id": 1,
+    "product_id": 123,
+    "quantity": 2,
+    "product_name": "Sample Product",
+    "price": 29.99,
+    "image_url": "https://example.com/image.jpg",
+    "stock": 50
+  }
 ]
 ```
 
-**Error Response (400 Bad Request):**
-```json
-{
-    "error": "Invalid email verification"
-}
-```
+**Error Responses:**
+- 400 Bad Request: `{"error": "Email is required"}`
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 500 Internal Server Error: `{"error": "Failed to retrieve cart", "message": "error details"}`
 
 ### POST /cart
-Add a product to cart or update quantity if already exists.
+Add a product to the cart or update quantity if already in cart.
 
 **Request Body:**
 ```json
 {
-    "product_id": 101,
-    "quantity": 2,
-    "email": "user@example.com"  // Required for verification
+  "email": "user@example.com",
+  "product_id": 123,
+  "quantity": 1
 }
 ```
 
 **Response (200 OK):**
 ```json
 {
-    "message": "Product added to cart successfully",
-    "cart_id": 1,
-    "product_id": 101,
-    "quantity": 2
+  "message": "Product added to cart successfully",
+  "cart_id": 1,
+  "product_id": 123,
+  "quantity": 1
 }
 ```
 
 **Error Responses:**
-```json
-{
-    "error": "Not enough stock available"
-}
-```
-or
-```json
-{
-    "error": "Invalid email verification"
-}
-```
+- 400 Bad Request: `{"error": "No JSON data provided"}`
+- 400 Bad Request: `{"error": "product_id is required"}`
+- 400 Bad Request: `{"error": "quantity must be a positive integer"}`
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 404 Not Found: `{"error": "Product not found"}`
+- 400 Bad Request: `{"error": "Not enough stock available"}`
+- 500 Internal Server Error: `{"error": "Failed to add product to cart", "message": "error details"}`
 
-### DELETE /cart/<cart_id>/products/<product_id>
-Remove a specific product from the cart.
+### DELETE /cart/{cart_id}/products/{product_id}
+Remove a product from the cart.
 
 **Query Parameters:**
-- `email` (required): User's email for verification
+- `email` (required): User's email address
 
 **Response (200 OK):**
 ```json
 {
-    "message": "Item removed from cart"
-}
-```
-
-**Error Response (400 Bad Request):**
-```json
-{
-    "error": "Invalid email verification"
-}
-```
-
-### POST /cart/checkout
-Process checkout with optional credit application.
-
-**Request Body:**
-```json
-{
-    "credits_to_apply": 50.0,  // Optional
-    "email": "user@example.com"  // Required for verification
-}
-```
-
-**Response (200 OK):**
-```json
-{
-    "message": "Checkout successful",
-    "final_total": 149.99,
-    "credits_earned": 15,
-    "remaining_credits": 35
+  "message": "Item removed from cart"
 }
 ```
 
 **Error Responses:**
-```json
-{
-    "error": "Not enough credits"
-}
-```
-or
-```json
-{
-    "error": "Not enough stock for Product Name. Available: X"
-}
-```
-or
-```json
-{
-    "error": "Invalid email verification"
-}
-```
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 404 Not Found: When cart or product not found
 
-### POST /cart/apply-coupon
-Apply a discount coupon to the cart.
+### POST /cart/checkout
+Checkout the cart and create an order.
 
 **Request Body:**
 ```json
 {
-    "coupon_code": "P1Q8",
-    "email": "user@example.com"  // Required for verification
+  "email": "user@example.com",
+  "credits_to_apply": 0.0  // optional
 }
 ```
 
 **Response (200 OK):**
 ```json
 {
-    "message": "Coupon applied successfully",
-    "original_total": 100.00,
-    "discount_percentage": 15,
-    "discount_amount": 15.00,
-    "new_total": 85.00
+  "message": "Checkout successful",
+  "final_total": 59.98,
+  "credits_earned": 5.99,
+  "remaining_credits": 10.00
 }
 ```
 
-**Error Response (400 Bad Request):**
+**Error Responses:**
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 400 Bad Request: `{"error": "Cart is empty"}`
+- 400 Bad Request: `{"error": "Not enough credits"}`
+- 400 Bad Request: `{"error": "Not enough stock for Product Name. Available: X"}`
+
+### POST /cart/apply-coupon
+Apply a coupon code to the cart.
+
+**Request Body:**
 ```json
 {
-    "error": "Invalid coupon code"
+  "email": "user@example.com",
+  "coupon_code": "P1Q8"
 }
 ```
-or
+
+**Response (200 OK):**
 ```json
 {
-    "error": "This coupon is expired"
+  "message": "Coupon applied successfully",
+  "original_total": 100.00,
+  "discount_percentage": 15,
+  "discount_amount": 15.00,
+  "new_total": 85.00
 }
 ```
-or
-```json
-{
-    "error": "This coupon has already been used"
-}
-```
-or
-```json
-{
-    "error": "Invalid email verification"
-}
-```
+
+**Error Responses:**
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 400 Bad Request: `{"error": "Invalid coupon code"}`
+- 400 Bad Request: `{"error": "This coupon is expired"}`
+- 400 Bad Request: `{"error": "This coupon has already been used"}`
+- 400 Bad Request: `{"error": "Cart is empty"}`
 
 ## Error Handling
 The API uses standard HTTP status codes:
@@ -848,102 +806,123 @@ curl -X GET 'http://localhost:5000/product/1'
 
 ## Cart API Endpoints
 
-### Get Cart Items
-```http
-GET /cart
-```
-Retrieves all items in the user's cart.
+### Base URL
+- Production: `https://ecommerceapi-production-48c7.up.railway.app/api`
+- Development: `http://localhost:5000/api`
+
+### GET /cart
+Retrieve items in the user's cart.
 
 **Query Parameters:**
-- `category` (optional): Filter items by product category
+- `email` (required): User's email address
 
-**Response:**
+**Response (200 OK):**
 ```json
 [
   {
     "cart_id": 1,
     "product_id": 123,
     "quantity": 2,
-    "product_name": "Product Name",
-    "price": 99.99,
-    "image_url": "http://example.com/image.jpg",
-    "category": "Electronics",
+    "product_name": "Sample Product",
+    "price": 29.99,
+    "image_url": "https://example.com/image.jpg",
     "stock": 50
   }
 ]
 ```
 
-### Add to Cart
-```http
-POST /cart
-```
+**Error Responses:**
+- 400 Bad Request: `{"error": "Email is required"}`
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 500 Internal Server Error: `{"error": "Failed to retrieve cart", "message": "error details"}`
+
+### POST /cart
 Add a product to the cart or update quantity if already in cart.
 
 **Request Body:**
 ```json
 {
+  "email": "user@example.com",
   "product_id": 123,
   "quantity": 1
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
-  "message": "Product added to cart successfully"
+  "message": "Product added to cart successfully",
+  "cart_id": 1,
+  "product_id": 123,
+  "quantity": 1
 }
 ```
 
-### Remove from Cart
-```http
-DELETE /cart/<cart_id>/products/<product_id>
-```
-Remove a specific product from the cart.
+**Error Responses:**
+- 400 Bad Request: `{"error": "No JSON data provided"}`
+- 400 Bad Request: `{"error": "product_id is required"}`
+- 400 Bad Request: `{"error": "quantity must be a positive integer"}`
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 404 Not Found: `{"error": "Product not found"}`
+- 400 Bad Request: `{"error": "Not enough stock available"}`
+- 500 Internal Server Error: `{"error": "Failed to add product to cart", "message": "error details"}`
 
-**Response:**
+### DELETE /cart/{cart_id}/products/{product_id}
+Remove a product from the cart.
+
+**Query Parameters:**
+- `email` (required): User's email address
+
+**Response (200 OK):**
 ```json
 {
   "message": "Item removed from cart"
 }
 ```
 
-### Checkout
-```http
-POST /cart/checkout
-```
-Process checkout for all items in cart.
+**Error Responses:**
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 404 Not Found: When cart or product not found
+
+### POST /cart/checkout
+Checkout the cart and create an order.
 
 **Request Body:**
 ```json
 {
-  "credits_to_apply": 50.0  // Optional
+  "email": "user@example.com",
+  "credits_to_apply": 0.0  // optional
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "message": "Checkout successful",
-  "final_total": 149.99,
-  "credits_earned": 15,
-  "remaining_credits": 35
+  "final_total": 59.98,
+  "credits_earned": 5.99,
+  "remaining_credits": 10.00
 }
 ```
 
-### Apply Coupon
-```http
-POST /cart/apply-coupon
-```
-Apply a discount coupon to the cart.
+**Error Responses:**
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 400 Bad Request: `{"error": "Cart is empty"}`
+- 400 Bad Request: `{"error": "Not enough credits"}`
+- 400 Bad Request: `{"error": "Not enough stock for Product Name. Available: X"}`
+
+### POST /cart/apply-coupon
+Apply a coupon code to the cart.
 
 **Request Body:**
 ```json
 {
+  "email": "user@example.com",
   "coupon_code": "P1Q8"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "message": "Coupon applied successfully",
@@ -953,6 +932,13 @@ Apply a discount coupon to the cart.
   "new_total": 85.00
 }
 ```
+
+**Error Responses:**
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 400 Bad Request: `{"error": "Invalid coupon code"}`
+- 400 Bad Request: `{"error": "This coupon is expired"}`
+- 400 Bad Request: `{"error": "This coupon has already been used"}`
+- 400 Bad Request: `{"error": "Cart is empty"}`
 
 ## Error Responses
 
