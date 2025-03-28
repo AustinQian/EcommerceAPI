@@ -80,7 +80,7 @@ def create_group_buy():
                 'discount_percentage': group_buy.discount_percentage,
                 'unique_link': group_buy.unique_link,
                 'end_date': group_buy.end_date.isoformat() if group_buy.end_date else None,
-                'status': 'active'
+                'status': 'active',
             }
         }), 201
         
