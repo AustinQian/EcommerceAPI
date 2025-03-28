@@ -21,8 +21,16 @@ jwt = JWTManager()
 def create_app(*args, **kwargs):
     app = Flask(__name__)
 
-    CORS(app)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    
+    # Initialize CORS
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["*"],  
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"]
+        }
+    })
+    
     # Load environment variables from .env file if running locally
     if os.getenv("RAILWAY_ENV") is None:  # Railway automatically injects its env vars
         load_dotenv()
