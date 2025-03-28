@@ -17,7 +17,7 @@ def generate_unique_link(length=8):
         if not GroupBuy.query.filter_by(unique_link=link).first():
             return link
 
-group_buy_bp = Blueprint('group_buy_bp', __name__, url_prefix='/groupbuy')
+group_buy_bp = Blueprint('group_buy_bp', __name__)
 
 @group_buy_bp.route('/create', methods=['POST'])
 @login_required

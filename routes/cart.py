@@ -5,7 +5,7 @@ from models.product import Product
 from models.cart_product import CartProduct
 from models import db
 
-cart_bp = Blueprint('cart_bp', __name__, url_prefix='/cart')
+cart_bp = Blueprint('cart_bp', __name__)
 
 COUPONS = {
     "P1Q8": {

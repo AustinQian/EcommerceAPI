@@ -3,7 +3,7 @@ from models.product import Product
 from models import db
 from datetime import datetime
 
-product_bp = Blueprint('product_bp', __name__, url_prefix='/products')
+product_bp = Blueprint('product_bp', __name__)
 
 # GET /products - List products with optional filtering
 @product_bp.route('', methods=['GET'])

@@ -4,7 +4,7 @@ from models.order import Order
 from models.order_item import OrderItem
 from models import db
 
-orders_bp = Blueprint('orders_bp', __name__, url_prefix='/orders')
+orders_bp = Blueprint('orders_bp', __name__)
 
 @orders_bp.route('', methods=['GET'])
 @login_required
