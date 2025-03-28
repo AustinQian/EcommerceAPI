@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.cart import Cart
 from models.product import Product
 from models.cart_product import CartProduct
@@ -23,23 +22,23 @@ COUPONS = {
 
 def verify_user_email(email):
     """Helper function to verify user email"""
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    if not email or email != user.email:
-        return False
-    return True
+    if not email:
+        return None
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return None
+    return user
 
 # GET /cart - Retrieve the current user's cart items
 @cart_bp.route('', methods=['GET'])
-@jwt_required()
 def get_cart():
     email = request.args.get('email')
-    if not verify_user_email(email):
-        return jsonify({'error': 'Invalid email verification'}), 400
+    user = verify_user_email(email)
+    if not user:
+        return jsonify({'error': 'Invalid email'}), 400
 
-    user_id = get_jwt_identity()
     category = request.args.get('category')
-    cart = Cart.query.filter_by(user_id=user_id).first()
+    cart = Cart.query.filter_by(user_id=user.id).first()
     if not cart:
         return jsonify([]), 200
     
@@ -64,7 +63,6 @@ def get_cart():
 
 # POST /cart - Add a product to the cart (or update quantity if already in cart)
 @cart_bp.route('', methods=['POST'])
-@jwt_required()
 def add_to_cart():
     try:
         data = request.get_json()
@@ -81,15 +79,11 @@ def add_to_cart():
             return jsonify({'error': 'quantity must be a positive integer'}), 400
             
         email = data.get('email')
-        if not email:
-            return jsonify({'error': 'email is required'}), 400
+        user = verify_user_email(email)
+        if not user:
+            return jsonify({'error': 'Invalid email'}), 400
         
-        if not verify_user_email(email):
-            return jsonify({'error': 'Invalid email verification'}), 400
-        
-        user_id = get_jwt_identity()
-        
-        # Ensure the product exists and check stock availability if needed
+        # Ensure the product exists and check stock availability
         product = Product.query.get(product_id)
         if not product:
             return jsonify({'error': 'Product not found'}), 404
@@ -98,9 +92,9 @@ def add_to_cart():
             return jsonify({'error': 'Not enough stock available'}), 400
         
         # Check if the user has a cart
-        cart = Cart.query.filter_by(user_id=user_id).first()
+        cart = Cart.query.filter_by(user_id=user.id).first()
         if not cart:
-            cart = Cart(user_id=user_id)
+            cart = Cart(user_id=user.id)
             db.session.add(cart)
             db.session.commit()
         
@@ -123,19 +117,21 @@ def add_to_cart():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': 'Failed to add product to cart',
+            'message': str(e)
+        }), 500
 
 # DELETE /cart/<cart_id> - Remove an item from the cart
 @cart_bp.route('/<int:cart_id>/products/<int:product_id>', methods=['DELETE'])
-@jwt_required()
 def remove_from_cart(cart_id, product_id):
     email = request.args.get('email')
-    if not verify_user_email(email):
-        return jsonify({'error': 'Invalid email verification'}), 400
+    user = verify_user_email(email)
+    if not user:
+        return jsonify({'error': 'Invalid email'}), 400
 
-    user_id = get_jwt_identity()
     # Ensure the cart belongs to the current user
-    cart = Cart.query.filter_by(id=cart_id, user_id=user_id).first_or_404()
+    cart = Cart.query.filter_by(id=cart_id, user_id=user.id).first_or_404()
 
     CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).delete()
     db.session.commit()
@@ -143,20 +139,17 @@ def remove_from_cart(cart_id, product_id):
 
 # POST /cart/checkout - Checkout all items in the cart
 @cart_bp.route('/checkout', methods=['POST'])
-@jwt_required()
 def checkout():
     data = request.get_json() or {}
     email = data.get('email')
-    if not verify_user_email(email):
-        return jsonify({'error': 'Invalid email verification'}), 400
-
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = verify_user_email(email)
+    if not user:
+        return jsonify({'error': 'Invalid email'}), 400
     
     # Retrieve optional credits to apply from request body
     credits_to_apply = float(data.get('credits_to_apply', 0.0))
     
-    cart = Cart.query.filter_by(user_id=user_id).first()
+    cart = Cart.query.filter_by(user_id=user.id).first()
     if not cart:
         return jsonify({'message': 'Cart is empty'}), 400
     
@@ -206,14 +199,13 @@ def checkout():
     }), 200
 
 @cart_bp.route('/apply-coupon', methods=['POST'])
-@jwt_required()
 def apply_coupon():
     data = request.get_json()
     email = data.get('email')
-    if not verify_user_email(email):
-        return jsonify({'error': 'Invalid email verification'}), 400
+    user = verify_user_email(email)
+    if not user:
+        return jsonify({'error': 'Invalid email'}), 400
 
-    user_id = get_jwt_identity()
     coupon_code = data.get('coupon_code')
 
     # 1) Validate coupon code input
@@ -229,7 +221,7 @@ def apply_coupon():
         return jsonify({"error": "This coupon has already been used"}), 400
 
     # 3) Calculate the user's cart total
-    cart = Cart.query.filter_by(user_id=user_id).first()
+    cart = Cart.query.filter_by(user_id=user.id).first()
     if not cart:
         return jsonify({"error": "Cart is empty"}), 400
     
