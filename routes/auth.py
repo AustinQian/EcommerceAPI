@@ -55,7 +55,7 @@ def register():
     user.set_password(password)
 
     # Generate Email Verification Token
-    token = generate_verification_token(email)  # Implement token generation
+    token = generate_verification_token(email)
 
     try:
         # Send Verification Email
@@ -99,12 +99,27 @@ def login():
     user.last_login_date = datetime.utcnow()
     db.session.commit()
 
-    access_token = create_access_token(identity=user.id)
+    # Create access token with additional claims
+    additional_claims = {
+        "email": user.email,
+        "username": user.username,
+        "role": user.role
+    }
+    
+    access_token = create_access_token(
+        identity=user.id,
+        additional_claims=additional_claims,
+        expires_delta=timedelta(hours=24)
+    )
+    
     login_user(user, remember=remember_me)
-    return jsonify({"access_token": access_token, 
-                    "remember: ": remember_me,
-                    "message": "Login successful",
-                    "user_id": user.id}), 200
+    return jsonify({
+        "access_token": access_token,
+        "remember": remember_me,
+        "message": "Login successful",
+        "user_id": user.id,
+        "email": user.email
+    }), 200
 
 # Email verification route
 @auth_bp.route("/verify/<token>", methods=["GET"])

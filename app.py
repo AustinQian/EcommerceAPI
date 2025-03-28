@@ -48,6 +48,12 @@ def create_app(*args, **kwargs):
     jwt_secret=os.environ.get("JWT_SECRET_KEY","secret")
     app.config["JWT_SECRET_KEY"] = jwt_secret
     
+    # Add JWT configuration
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
+    app.config["JWT_HEADER_NAME"] = "Authorization"
+    app.config["JWT_HEADER_TYPE"] = "Bearer"
+    
     mail_port=os.environ.get("MAIL_PORT","587")
     app.config["MAIL_PORT"] = mail_port
 
