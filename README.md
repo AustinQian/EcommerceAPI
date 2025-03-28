@@ -221,11 +221,11 @@ All endpoints in Authentication Endpoints are prefixed with `/auth`.
 
 # Group Buying Discounts API
 
-This API enables users to create, join, and apply discounts through a "group buying" mechanism. When enough participants join a group buy, the discount is activated and applied to the product's price in the user's cart.
+This API enables users to create and join group buys to get discounts on products. When enough participants join a group buy, the discount is activated and can be applied to the product's price.
 
 ## Endpoints
 
-### GET /groupbuy/products
+### GET /api/groupbuy/products
 Get list of products available for group buy.
 
 **Response (200 OK):**
@@ -243,7 +243,7 @@ Get list of products available for group buy.
 ]
 ```
 
-### POST /groupbuy/create
+### POST /api/groupbuy/create
 Create a new group buy for an existing product.
 
 **Request Body:**
@@ -267,63 +267,45 @@ Create a new group buy for an existing product.
         "min_participants": 5,
         "current_participants": 0,
         "discount_percentage": 15.0,
-        "unique_link": "abc123",
+        "unique_link": "abc123xy",
         "end_date": "2024-12-31T23:59:59",
         "status": "active"
     }
 }
 ```
 
-**Error Responses:**
-```json
-{
-    "error": "Missing required field: product_id"
-}
-```
-or
-```json
-{
-    "error": "Discount percentage must be between 0 and 100"
-}
-```
-or
-```json
-{
-    "error": "Minimum participants must be at least 2"
-}
-```
-
-### GET /groupbuy/<unique_link>
-Get details of a specific group buy.
+### GET /api/groupbuy/<unique_link>
+Get details of a specific group buy using its unique link.
 
 **Response (200 OK):**
 ```json
 {
     "id": 1,
     "product_id": 123,
-    "product_name": "Product Name",
+    "discount_percentage": 15.0,
     "min_participants": 5,
     "current_participants": 2,
-    "discount_percentage": 15.0,
-    "unique_link": "abc123",
-    "end_date": "2024-12-31T23:59:59",
-    "status": "active"
+    "unique_link": "abc123xy",
+    "is_active": true,
+    "participant_count": 2
 }
 ```
 
-### POST /groupbuy/join/<unique_link>
-Join an existing group buy.
+### POST /api/groupbuy/join/<unique_link>
+Join an existing group buy using its unique link. No authentication required.
 
 **Response (200 OK):**
 ```json
 {
     "message": "Joined group buy successfully",
-    "current_participants": 3
+    "current_participants": 3,
+    "min_participants": 5,
+    "is_active": false
 }
 ```
 
-### POST /groupbuy/apply-discount/<cart_id>
-Apply group buy discount to cart.
+### POST /api/groupbuy/apply-discount/<cart_id>
+Apply group buy discount to cart once minimum participants is reached.
 
 **Request Body:**
 ```json
@@ -335,66 +317,70 @@ Apply group buy discount to cart.
 **Response (200 OK):**
 ```json
 {
-    "message": "Discount applied successfully",
+    "message": "Discount applied to cart item",
     "original_price": 100.00,
-    "discounted_price": 85.00,
-    "discount_percentage": 15.0
+    "discounted_price": 85.00
 }
 ```
 
 ## Features
 
+- **Easy Joining**: Simply use the unique link to join a group buy - no authentication required
 - **Product Selection**: Choose from existing in-stock products
-- **Customizable Discount**: Set your own discount percentage (0-100%)
+- **Customizable Discount**: Set discount percentage (0-100%)
 - **Flexible Participation**: Set minimum number of participants (minimum 2)
 - **Time Limit**: Optional end date for the group buy
 - **Real-time Updates**: Track current number of participants
-- **Unique Links**: Shareable links for each group buy
-- **Status Tracking**: Monitor group buy status (active/expired/completed)
+- **Automatic Activation**: Group buy automatically activates when minimum participants is reached
+- **Unique Links**: Each group buy gets a unique, shareable link
+- **Status Tracking**: Monitor if group buy is active
 
 ## Error Handling
 
-- `400 Bad Request`: Invalid input parameters
-- `401 Unauthorized`: User not authenticated
+- `400 Bad Request`: Invalid input parameters or group buy is no longer active
 - `404 Not Found`: Product or group buy not found
 - `500 Internal Server Error`: Server-side error
 
 ## Example Usage
 
-1. **Get Available Products:**
+1. **Create a Group Buy:**
 ```bash
-curl -X GET 'http://localhost:5000/groupbuy/products' \
-  -H 'Authorization: Bearer your_token'
-```
-
-2. **Create Group Buy:**
-```bash
-curl -X POST 'http://localhost:5000/groupbuy/create' \
+curl -X POST 'https://ecommerceapi-production-48c7.up.railway.app/api/groupbuy/create' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer your_token' \
   -d '{
     "product_id": 1,
     "min_participants": 5,
-    "discount_percentage": 15.0,
-    "end_date": "2024-12-31T23:59:59"
+    "discount_percentage": 15.0
   }'
 ```
 
-3. **Join Group Buy:**
+2. **Join a Group Buy:**
 ```bash
-curl -X POST 'http://localhost:5000/groupbuy/join/abc123' \
-  -H 'Authorization: Bearer your_token'
+curl -X POST 'https://ecommerceapi-production-48c7.up.railway.app/api/groupbuy/join/abc123xy'
 ```
 
-4. **Apply Discount:**
+3. **Check Group Buy Status:**
 ```bash
-curl -X POST 'http://localhost:5000/groupbuy/apply-discount/1' \
+curl -X GET 'https://ecommerceapi-production-48c7.up.railway.app/api/groupbuy/abc123xy'
+```
+
+4. **Apply Discount to Cart:**
+```bash
+curl -X POST 'https://ecommerceapi-production-48c7.up.railway.app/api/groupbuy/apply-discount/1' \
   -H 'Content-Type: application/json' \
-  -H 'Authorization: Bearer your_token' \
   -d '{
     "group_buy_id": 1
   }'
 ```
+
+## Important Notes
+
+- Group buys require a minimum of 2 participants
+- Discounts can only be applied once the minimum number of participants is reached
+- Each product can have its own unique group buy link
+- Group buy status automatically updates when minimum participants join
+- No authentication required to join a group buy - just use the unique link
+- Discounts are applied as a percentage off the original price
 
 ---
 # Cart Blueprint Documentation
