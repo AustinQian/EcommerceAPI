@@ -107,8 +107,8 @@ def add_to_cart():
             return jsonify({'error': 'product_id is required'}), 400
             
         quantity = data.get('quantity', 1)
-        if not isinstance(quantity, int) or quantity < 1:
-            return jsonify({'error': 'quantity must be a positive integer'}), 400
+        if not isinstance(quantity, int):
+            return jsonify({'error': 'quantity must be an integer'}), 400
             
         email = data.get('email')
         print(f"Attempting to verify email: {email}")
@@ -144,17 +144,38 @@ def add_to_cart():
         try:
             final_quantity = quantity  # Initialize final quantity
             association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+            
             if association:
                 print(f"Updating existing cart item. Old quantity: {association.quantity}")
-                association.quantity += quantity
-                final_quantity = association.quantity
-                print(f"New quantity: {final_quantity}")
+                if quantity < 0:
+                    # If quantity is negative, reduce the existing quantity
+                    new_quantity = association.quantity + quantity  # Adding negative number reduces it
+                    if new_quantity <= 0:
+                        # If reducing to 0 or less, remove the item
+                        CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).delete()
+                        message = 'Item removed from cart'
+                        final_quantity = 0
+                    else:
+                        # Otherwise, update the quantity
+                        association.quantity = new_quantity
+                        final_quantity = new_quantity
+                        message = f'Quantity reduced. Remaining: {final_quantity}'
+                else:
+                    # If quantity is positive, add to existing quantity
+                    association.quantity += quantity
+                    final_quantity = association.quantity
+                    message = f'Quantity increased. New total: {final_quantity}'
             else:
+                # If product is not in cart and quantity is negative, return error
+                if quantity < 0:
+                    return jsonify({'error': 'Cannot reduce quantity of item not in cart'}), 400
+                # Otherwise, add new item
                 print("Adding new product to cart")
                 new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
                 db.session.add(new_assoc)
+                message = f'Product added to cart. Quantity: {quantity}'
             
-            # Check if the final quantity exceeds available stock
+            # Check if the final quantity exceeds available stock (only for positive quantities)
             if final_quantity > product.stock:
                 return jsonify({'error': 'Not enough stock available for the total quantity'}), 400
             
@@ -162,7 +183,7 @@ def add_to_cart():
             print("Cart updated successfully")
 
             return jsonify({
-                'message': 'Product added to cart successfully',
+                'message': message,
                 'cart_id': cart.id,
                 'product_id': product_id,
                 'quantity': final_quantity
