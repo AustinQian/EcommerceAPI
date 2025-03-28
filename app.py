@@ -2,7 +2,7 @@ import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, get_jwt_identity
 from flask_mail import Mail
 from models import db
 from dotenv import load_dotenv
@@ -80,6 +80,17 @@ def create_app(*args, **kwargs):
     def load_user(user_id):
         from models.user import User  # Import here to avoid circular imports
         return User.query.get(int(user_id))
+
+    # Add JWT token loader
+    @jwt.user_identity_loader
+    def user_identity_lookup(user):
+        return user.id
+
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        from models.user import User
+        identity = jwt_data["sub"]
+        return User.query.filter_by(id=identity).one_or_none()
 
     from routes.auth import auth_bp
     from routes.home import home_bp
