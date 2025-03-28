@@ -67,7 +67,7 @@ def homepage() -> tuple[Dict[str, Any], int]:
     except SQLAlchemyError as e:
         return jsonify({"error": "Database error occurred"}), 500
 
-@home_bp.route("/", methods=["GET"])
+@home_bp.route("", methods=["GET"])
 def all_products():
     try:
         # Get category filter from query parameters
