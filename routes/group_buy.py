@@ -9,6 +9,7 @@ from datetime import datetime
 import random
 import string
 import secrets
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 def generate_unique_link():
     """Generate a unique link for the group buy."""
@@ -18,83 +19,74 @@ def generate_unique_link():
         if not GroupBuy.query.filter_by(unique_link=link).first():
             return link
 
-group_buy_bp = Blueprint('groupbuy', __name__)
+groupbuy_bp = Blueprint('groupbuy_bp', __name__)
 
-@group_buy_bp.route('/create', methods=['POST'])
+@groupbuy_bp.route('/create', methods=['POST'])
 def create_group_buy():
-    """
-    Create a new group buy for an existing product.
-    
-    Request Body:
-    {
-        "product_id": int,
-        "min_participants": int,
-        "discount_percentage": float,
-        "end_date": string (ISO format, optional)
-    }
-    """
+    """Create a new group buy."""
     try:
         data = request.get_json()
-        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
         # Validate required fields
         required_fields = ['product_id', 'min_participants', 'discount_percentage']
         for field in required_fields:
             if field not in data:
-                return jsonify({"error": f"Missing required field: {field}"}), 400
-        
-        # Validate product exists
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+                
+        # Validate values
+        if data['min_participants'] < 2:
+            return jsonify({'error': 'Minimum participants must be at least 2'}), 400
+            
+        if not 0 <= data['discount_percentage'] <= 100:
+            return jsonify({'error': 'Discount percentage must be between 0 and 100'}), 400
+            
+        # Check if product exists and has stock
         product = Product.query.get(data['product_id'])
         if not product:
-            return jsonify({"error": "Product not found"}), 404
+            return jsonify({'error': 'Product not found'}), 404
+        if product.stock <= 0:
+            return jsonify({'error': 'Product is out of stock'}), 400
             
-        # Validate discount percentage
-        discount = float(data['discount_percentage'])
-        if not 0 < discount <= 100:
-            return jsonify({"error": "Discount percentage must be between 0 and 100"}), 400
-            
-        # Validate minimum participants
-        min_participants = int(data['min_participants'])
-        if min_participants < 2:
-            return jsonify({"error": "Minimum participants must be at least 2"}), 400
-            
-        # Generate unique link
-        unique_link = generate_unique_link()
-        
         # Create group buy
         group_buy = GroupBuy(
             product_id=data['product_id'],
-            min_participants=min_participants,
-            discount_percentage=discount,
-            unique_link=unique_link,
-            created_by=current_user.id,
-            end_date=datetime.fromisoformat(data['end_date']) if 'end_date' in data else None
+            discount_percentage=data['discount_percentage'],
+            min_participants=data['min_participants']
         )
+        
+        # Set end date if provided
+        if 'end_date' in data:
+            try:
+                group_buy.end_date = datetime.fromisoformat(data['end_date'])
+            except ValueError:
+                return jsonify({'error': 'Invalid end_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400
         
         db.session.add(group_buy)
         db.session.commit()
         
         return jsonify({
-            "message": "Group buy created successfully",
-            "group_buy": {
-                "id": group_buy.id,
-                "product_id": group_buy.product_id,
-                "product_name": product.name,
-                "min_participants": group_buy.min_participants,
-                "current_participants": 0,
-                "discount_percentage": group_buy.discount_percentage,
-                "unique_link": group_buy.unique_link,
-                "end_date": group_buy.end_date.isoformat() if group_buy.end_date else None,
-                "status": "active"
+            'message': 'Group buy created successfully',
+            'group_buy': {
+                'id': group_buy.id,
+                'product_id': group_buy.product_id,
+                'product_name': product.name,
+                'min_participants': group_buy.min_participants,
+                'current_participants': 0,
+                'discount_percentage': group_buy.discount_percentage,
+                'unique_link': group_buy.unique_link,
+                'end_date': group_buy.end_date.isoformat() if group_buy.end_date else None,
+                'status': 'active'
             }
         }), 201
         
-    except ValueError as e:
-        return jsonify({"error": "Invalid input format"}), 400
     except Exception as e:
+        print(f"Error creating group buy: {str(e)}")
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
-@group_buy_bp.route('/products', methods=['GET'])
+@groupbuy_bp.route('/products', methods=['GET'])
 def get_available_products():
     """
     Get list of products available for group buy.
@@ -116,7 +108,7 @@ def get_available_products():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@group_buy_bp.route('/<unique_link>', methods=['GET'])
+@groupbuy_bp.route('/<unique_link>', methods=['GET'])
 def get_group_buy(unique_link):
     # Retrieve details about a specific group buy using the unique link.
     group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
@@ -135,7 +127,7 @@ def get_group_buy(unique_link):
         'participant_count': participants
     }), 200
 
-@group_buy_bp.route('/join/<unique_link>', methods=['POST'])
+@groupbuy_bp.route('/join/<unique_link>', methods=['POST'])
 def join_group_buy(unique_link):
     # Join a group buy using the unique link.
     group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
@@ -170,7 +162,7 @@ def join_group_buy(unique_link):
     db.session.commit()
     return jsonify({'message': 'Joined group buy successfully'}), 200
 
-@group_buy_bp.route('/apply-discount/<int:cart_id>', methods=['POST'])
+@groupbuy_bp.route('/apply-discount/<int:cart_id>', methods=['POST'])
 def apply_group_buy_discount(cart_id):
     # Apply the group-buy discount to the items in the user's cart (if applicable).
     data = request.get_json()
