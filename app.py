@@ -23,14 +23,7 @@ def create_app(*args, **kwargs):
 
     
     # Initialize CORS
-    CORS(app, resources={
-        r"/*": {
-            "origins": ["*"],  # Allow all origins
-            "methods": ["*"],
-            "allow_headers": ["*"],
-            "supports_credentials": True
-        }
-    })
+    CORS(app, resources={r"/*": {"origins": "*"}})
     
     # Load environment variables from .env file if running locally
     if os.getenv("RAILWAY_ENV") is None:  # Railway automatically injects its env vars
