@@ -49,6 +49,9 @@ def create_group_buy():
         if product.stock <= 0:
             return jsonify({'error': 'Product is out of stock'}), 400
             
+        # Generate unique link
+        unique_link = generate_unique_link()
+            
         # Create group buy
         group_buy = GroupBuy(
             product_id=data['product_id'],
@@ -56,14 +59,16 @@ def create_group_buy():
             min_participants=data['min_participants']
         )
         
+        # Set the unique link for both group buy and product
+        group_buy.unique_link = unique_link
+        product.uniqueLink = unique_link
+        
         # Set end date if provided
         if 'end_date' in data:
             try:
                 group_buy.end_date = datetime.fromisoformat(data['end_date'])
             except ValueError:
                 return jsonify({'error': 'Invalid end_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400
-        
-        
         
         db.session.add(group_buy)
         db.session.commit()
@@ -77,9 +82,9 @@ def create_group_buy():
                 'min_participants': group_buy.min_participants,
                 'current_participants': 0,
                 'discount_percentage': group_buy.discount_percentage,
-                'unique_link': group_buy.unique_link,
+                'unique_link': unique_link,
                 'end_date': group_buy.end_date.isoformat() if group_buy.end_date else None,
-                'status': 'active',
+                'status': 'active'
             }
         }), 201
         

@@ -13,7 +13,7 @@ class Product(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey("_user.id"), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey("category.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    uniqueLink = db.Column(db.Boolean, default=False)
+    uniqueLink = db.Column(db.String(50), nullable=True)
 
     # Relationships
     seller = db.relationship("User", backref="products")
