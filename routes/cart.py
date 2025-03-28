@@ -28,7 +28,6 @@ def verify_user_email(email):
 
 # GET /cart - Retrieve the current user's cart items
 @cart_bp.route('', methods=['GET'])
-@login_required
 def get_cart():
     email = request.args.get('email')
     if not verify_user_email(email):
@@ -60,7 +59,6 @@ def get_cart():
 
 # POST /cart - Add a product to the cart (or update quantity if already in cart)
 @cart_bp.route('', methods=['POST'])
-@login_required
 def add_to_cart():
     data = request.get_json() 
     product_id = data.get('product_id')
@@ -101,7 +99,6 @@ def add_to_cart():
 
 # DELETE /cart/<cart_id> - Remove an item from the cart
 @cart_bp.route('/<int:cart_id>/products/<int:product_id>', methods=['DELETE'])
-@login_required
 def remove_from_cart(cart_id, product_id):
     email = request.args.get('email')
     if not verify_user_email(email):
@@ -116,7 +113,6 @@ def remove_from_cart(cart_id, product_id):
 
 # POST /cart/checkout - Checkout all items in the cart
 @cart_bp.route('/checkout', methods=['POST'])
-@login_required
 def checkout():
     data = request.get_json() or {}
     email = data.get('email')
@@ -177,7 +173,6 @@ def checkout():
     }), 200
 
 @cart_bp.route('/apply-coupon', methods=['POST'])
-@login_required
 def apply_coupon():
     data = request.get_json()
     email = data.get('email')
