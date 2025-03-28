@@ -94,7 +94,7 @@ def all_products():
                 "category_id": product.category_id,
                 "category_name": product.category.name if product.category else None,
                 "created_at": product.created_at.isoformat() if product.created_at else None,
-                "is_groupbuy": product.is_groupbuy
+                "uniqueLink": product.uniqueLink
             })
         return jsonify(product_list), 200
     except Exception as e:
@@ -217,7 +217,7 @@ def get_product_details(product_id):
             "seller_name": product.seller.username if product.seller else None,
             "average_rating": product.average_rating if hasattr(product, 'average_rating') else None,
             "review_count": product.review_count if hasattr(product, 'review_count') else 0,
-            "is_groupbuy": product.is_groupbuy
+            "uniqueLink": product.uniqueLink
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

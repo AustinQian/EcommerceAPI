@@ -63,8 +63,7 @@ def create_group_buy():
             except ValueError:
                 return jsonify({'error': 'Invalid end_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'}), 400
         
-        # Set product's is_groupbuy flag to True
-        product.is_groupbuy = True
+        
         
         db.session.add(group_buy)
         db.session.commit()
