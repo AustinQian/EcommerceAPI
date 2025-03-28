@@ -764,6 +764,53 @@ curl -X GET 'http://localhost:5000/home?category=1'
 }
 ```
 
+### GET `/product/<product_id>`
+- **URL**: `/product/<product_id>`
+- **Method**: GET
+- **Description**: Returns detailed information about a specific product.
+
+**URL Parameters:**
+- `product_id` (required): The ID of the product to retrieve
+
+**Response (200 OK):**
+```json
+{
+    "id": 1,
+    "name": "Product Name",
+    "description": "Detailed product description",
+    "price": 99.99,
+    "stock": 50,
+    "image_url": "http://example.com/image.jpg",
+    "seller_id": 1,
+    "category_id": 1,
+    "category_name": "Electronics",
+    "created_at": "2023-10-01T12:00:00",
+    "seller_name": "John Doe",
+    "average_rating": 4.5,
+    "review_count": 10
+}
+```
+
+**Error Responses:**
+- **404 Not Found:**
+```json
+{
+    "error": "Product not found"
+}
+```
+- **500 Internal Server Error:**
+```json
+{
+    "error": "Error message description"
+}
+```
+
+**Example Usage:**
+```bash
+# Get details for product with ID 1
+curl -X GET 'http://localhost:5000/product/1'
+```
+
 # NEOMART E-commerce API Documentation
 
 ## Cart API Endpoints

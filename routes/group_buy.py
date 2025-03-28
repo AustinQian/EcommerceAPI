@@ -6,6 +6,16 @@ from models.group_buy_participant import GroupBuyParticipant
 from models.product import Product
 from models.cart import Cart  # if needed to apply discount
 from datetime import datetime
+import random
+import string
+
+def generate_unique_link(length=8):
+    """Generate a unique link for group buy."""
+    characters = string.ascii_letters + string.digits
+    while True:
+        link = ''.join(random.choice(characters) for _ in range(length))
+        if not GroupBuy.query.filter_by(unique_link=link).first():
+            return link
 
 group_buy_bp = Blueprint('group_buy_bp', __name__, url_prefix='/groupbuy')
 
