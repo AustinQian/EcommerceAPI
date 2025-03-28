@@ -956,3 +956,105 @@ All cart endpoints require user authentication using Flask-Login. Requests must 
 - Flask-Login
 - SQLAlchemy
 - Python 3.x
+
+# Order Management API
+
+This API provides endpoints for users to view their order history and order details.
+
+## Endpoints
+
+### GET /orders
+Get all orders for the current user.
+
+**Response (200 OK):**
+```json
+[
+    {
+        "order_id": 1,
+        "created_at": "2024-03-15T10:30:00",
+        "total_amount": 149.99,
+        "status": "completed",
+        "items": [
+            {
+                "product_id": 1,
+                "product_name": "Product Name",
+                "quantity": 2,
+                "price": 74.99,
+                "image_url": "http://example.com/image.jpg"
+            }
+        ],
+        "credits_used": 50.0,
+        "credits_earned": 15
+    }
+]
+```
+
+### GET /orders/<order_id>
+Get detailed information about a specific order.
+
+**Response (200 OK):**
+```json
+{
+    "order_id": 1,
+    "created_at": "2024-03-15T10:30:00",
+    "total_amount": 149.99,
+    "status": "completed",
+    "items": [
+        {
+            "product_id": 1,
+            "product_name": "Product Name",
+            "quantity": 2,
+            "price": 74.99,
+            "image_url": "http://example.com/image.jpg",
+            "category": "Electronics"
+        }
+    ],
+    "credits_used": 50.0,
+    "credits_earned": 15,
+    "shipping_address": "123 Main St, City, Country",
+    "payment_method": "credit_card"
+}
+```
+
+**Error Responses:**
+- **404 Not Found:**
+```json
+{
+    "error": "Order not found"
+}
+```
+- **500 Internal Server Error:**
+```json
+{
+    "error": "Error message description"
+}
+```
+
+## Example Usage
+
+1. **Get All Orders:**
+```bash
+curl -X GET 'http://localhost:5000/orders' \
+  -H 'Authorization: Bearer your_token'
+```
+
+2. **Get Order Details:**
+```bash
+curl -X GET 'http://localhost:5000/orders/1' \
+  -H 'Authorization: Bearer your_token'
+```
+
+## Features
+
+- **Order History**: View all past orders
+- **Order Details**: Get detailed information about specific orders
+- **Item Details**: View products purchased in each order
+- **Credit Tracking**: See credits used and earned for each order
+- **Status Tracking**: Monitor order status
+- **Secure Access**: Only authenticated users can view their own orders
+
+## Error Handling
+
+- `401 Unauthorized`: User not authenticated
+- `404 Not Found`: Order not found or not owned by user
+- `500 Internal Server Error`: Server-side error

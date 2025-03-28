@@ -133,6 +133,10 @@ def checkout():
         CartProduct.query.filter_by(cart_id=cart.id, product_id=item.product_id).delete()
 
     credits_earned = current_user.award_credits(total_price)
+    
+    # Set the checked status to True after successful checkout
+    cart.checked = True
+    
     db.session.commit()
 
     return jsonify({
