@@ -8,7 +8,7 @@ This document describes the endpoints provided by the authentication API. The AP
 
 ## Base URL
 
-- **Production:** `https://yourdomain.com/api` except home API
+- **Production:** `https://yourdomain.com/api`
 - **Development:** `http://localhost:5000/api`
 
 
