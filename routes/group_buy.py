@@ -8,19 +8,19 @@ from models.cart import Cart  # if needed to apply discount
 from datetime import datetime
 import random
 import string
+import secrets
 
-def generate_unique_link(length=8):
-    """Generate a unique link for group buy."""
-    characters = string.ascii_letters + string.digits
+def generate_unique_link():
+    """Generate a unique link for the group buy."""
+    alphabet = string.ascii_letters + string.digits
     while True:
-        link = ''.join(random.choice(characters) for _ in range(length))
+        link = ''.join(secrets.choice(alphabet) for _ in range(8))
         if not GroupBuy.query.filter_by(unique_link=link).first():
             return link
 
 group_buy_bp = Blueprint('group_buy_bp', __name__)
 
 @group_buy_bp.route('/create', methods=['POST'])
-@login_required
 def create_group_buy():
     """
     Create a new group buy for an existing product.
@@ -95,7 +95,6 @@ def create_group_buy():
         return jsonify({"error": str(e)}), 500
 
 @group_buy_bp.route('/products', methods=['GET'])
-@login_required
 def get_available_products():
     """
     Get list of products available for group buy.
@@ -137,7 +136,6 @@ def get_group_buy(unique_link):
     }), 200
 
 @group_buy_bp.route('/join/<unique_link>', methods=['POST'])
-@login_required
 def join_group_buy(unique_link):
     # Join a group buy using the unique link.
     group_buy = GroupBuy.query.filter_by(unique_link=unique_link).first()
@@ -173,7 +171,6 @@ def join_group_buy(unique_link):
     return jsonify({'message': 'Joined group buy successfully'}), 200
 
 @group_buy_bp.route('/apply-discount/<int:cart_id>', methods=['POST'])
-@login_required
 def apply_group_buy_discount(cart_id):
     # Apply the group-buy discount to the items in the user's cart (if applicable).
     data = request.get_json()
