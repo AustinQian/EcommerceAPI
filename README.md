@@ -429,6 +429,7 @@ Retrieves all items in the user's cart with optional category filtering.
 
 **Query Parameters:**
 - `category` (optional): Filter items by category ID (e.g., `/cart?category=1` for Electronics)
+- `email` (required): User's email for verification
 
 **Response (200 OK):**
 ```json
@@ -446,22 +447,11 @@ Retrieves all items in the user's cart with optional category filtering.
 ]
 ```
 
-**Error Response (500 Internal Server Error):**
+**Error Response (400 Bad Request):**
 ```json
 {
-    "error": "Error message description"
+    "error": "Invalid email verification"
 }
-```
-
-**Example Usage:**
-```bash
-# Get all cart items
-curl -X GET 'http://localhost:5000/cart' \
-  -H 'Authorization: Bearer your_token'
-
-# Get cart items filtered by category (e.g., Electronics with category_id=1)
-curl -X GET 'http://localhost:5000/cart?category=1' \
-  -H 'Authorization: Bearer your_token'
 ```
 
 ### POST /cart
@@ -471,31 +461,51 @@ Add a product to cart or update quantity if already exists.
 ```json
 {
     "product_id": 101,
-    "quantity": 2
+    "quantity": 2,
+    "email": "user@example.com"  // Required for verification
 }
 ```
 
 **Response (200 OK):**
 ```json
 {
-    "message": "Product added to cart successfully"
+    "message": "Product added to cart successfully",
+    "cart_id": 1,
+    "product_id": 101,
+    "quantity": 2
 }
 ```
 
-**Error Response (400 Bad Request):**
+**Error Responses:**
 ```json
 {
     "error": "Not enough stock available"
+}
+```
+or
+```json
+{
+    "error": "Invalid email verification"
 }
 ```
 
 ### DELETE /cart/<cart_id>/products/<product_id>
 Remove a specific product from the cart.
 
+**Query Parameters:**
+- `email` (required): User's email for verification
+
 **Response (200 OK):**
 ```json
 {
     "message": "Item removed from cart"
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+    "error": "Invalid email verification"
 }
 ```
 
@@ -505,7 +515,8 @@ Process checkout with optional credit application.
 **Request Body:**
 ```json
 {
-    "credits_to_apply": 50.0  // Optional
+    "credits_to_apply": 50.0,  // Optional
+    "email": "user@example.com"  // Required for verification
 }
 ```
 
@@ -531,6 +542,12 @@ or
     "error": "Not enough stock for Product Name. Available: X"
 }
 ```
+or
+```json
+{
+    "error": "Invalid email verification"
+}
+```
 
 ### POST /cart/apply-coupon
 Apply a discount coupon to the cart.
@@ -538,7 +555,8 @@ Apply a discount coupon to the cart.
 **Request Body:**
 ```json
 {
-    "coupon_code": "P1Q8"
+    "coupon_code": "P1Q8",
+    "email": "user@example.com"  // Required for verification
 }
 ```
 
@@ -565,6 +583,18 @@ or
     "error": "This coupon is expired"
 }
 ```
+or
+```json
+{
+    "error": "This coupon has already been used"
+}
+```
+or
+```json
+{
+    "error": "Invalid email verification"
+}
+```
 
 ## Error Handling
 The API uses standard HTTP status codes:
@@ -588,7 +618,8 @@ curl -X POST 'http://localhost:5000/cart' \
   -H 'Authorization: Bearer your_token' \
   -d '{
     "product_id": 101,
-    "quantity": 2
+    "quantity": 2,
+    "email": "user@example.com"
   }'
 ```
 
@@ -598,7 +629,8 @@ curl -X POST 'http://localhost:5000/cart/apply-coupon' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer your_token' \
   -d '{
-    "coupon_code": "P1Q8"
+    "coupon_code": "P1Q8",
+    "email": "user@example.com"
   }'
 ```
 
@@ -608,7 +640,8 @@ curl -X POST 'http://localhost:5000/cart/checkout' \
   -H 'Content-Type: application/json' \
   -H 'Authorization: Bearer your_token' \
   -d '{
-    "credits_to_apply": 50.0
+    "credits_to_apply": 50.0,
+    "email": "user@example.com"
   }'
 ```
 

@@ -20,11 +20,20 @@ COUPONS = {
     }
 }
 
+def verify_user_email(email):
+    """Helper function to verify user email"""
+    if not email or email != current_user.email:
+        return False
+    return True
 
 # GET /cart - Retrieve the current user's cart items
 @cart_bp.route('', methods=['GET'])
 @login_required
 def get_cart():
+    email = request.args.get('email')
+    if not verify_user_email(email):
+        return jsonify({'error': 'Invalid email verification'}), 400
+
     category = request.args.get('category')
     cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart:
@@ -56,16 +65,23 @@ def add_to_cart():
     data = request.get_json() 
     product_id = data.get('product_id')
     quantity = data.get('quantity', 1)
+    email = data.get('email')
+    
+    if not verify_user_email(email):
+        return jsonify({'error': 'Invalid email verification'}), 400
+    
     # Ensure the product exists and check stock availability if needed
     product = Product.query.get_or_404(product_id)
     if product.stock < quantity:
-        return jsonify({'error': 'Not enough stock available'}), 400  # Fixed: Use proper string formatting
+        return jsonify({'error': 'Not enough stock available'}), 400
+    
     # Check if the user has a cart
     cart = Cart.query.filter_by(user_id=current_user.id).first()
     if not cart:
         cart = Cart(user_id=current_user.id)
         db.session.add(cart)
         db.session.commit()
+    
     # Check if the product is already in the cart
     association = CartProduct.query.filter_by(cart_id=cart.id, product_id=product_id).first()
     if association:
@@ -73,14 +89,24 @@ def add_to_cart():
     else:
         new_assoc = CartProduct(cart_id=cart.id, product_id=product_id, quantity=quantity)
         db.session.add(new_assoc)
+    
     db.session.commit()
 
-    return jsonify({'message': 'Product added to cart successfully'}), 200  # Fixed: Use proper string formatting
+    return jsonify({
+        'message': 'Product added to cart successfully',
+        'cart_id': cart.id,
+        'product_id': product_id,
+        'quantity': quantity
+    }), 200
 
 # DELETE /cart/<cart_id> - Remove an item from the cart
 @cart_bp.route('/<int:cart_id>/products/<int:product_id>', methods=['DELETE'])
 @login_required
 def remove_from_cart(cart_id, product_id):
+    email = request.args.get('email')
+    if not verify_user_email(email):
+        return jsonify({'error': 'Invalid email verification'}), 400
+
     # Ensure the cart belongs to the current user
     cart = Cart.query.filter_by(id=cart_id, user_id=current_user.id).first_or_404()
 
@@ -92,8 +118,12 @@ def remove_from_cart(cart_id, product_id):
 @cart_bp.route('/checkout', methods=['POST'])
 @login_required
 def checkout():
-    # Retrieve optional credits to apply from request body
     data = request.get_json() or {}
+    email = data.get('email')
+    if not verify_user_email(email):
+        return jsonify({'error': 'Invalid email verification'}), 400
+
+    # Retrieve optional credits to apply from request body
     credits_to_apply = float(data.get('credits_to_apply', 0.0))
     
     cart = Cart.query.filter_by(user_id=current_user.id).first()
@@ -146,12 +176,14 @@ def checkout():
         'remaining_credits': current_user.credits
     }), 200
 
-
 @cart_bp.route('/apply-coupon', methods=['POST'])
 @login_required
 def apply_coupon():
-    # Validates a coupon code and applies a discount to the user's cart total.
     data = request.get_json()
+    email = data.get('email')
+    if not verify_user_email(email):
+        return jsonify({'error': 'Invalid email verification'}), 400
+
     coupon_code = data.get('coupon_code')
 
     # 1) Validate coupon code input
