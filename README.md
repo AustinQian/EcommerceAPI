@@ -451,152 +451,62 @@ Retrieve items in the user's cart.
 - 500 Internal Server Error: `{"error": "Failed to retrieve cart", "message": "error details"}`
 
 ### POST /cart
-Adds a product to the cart or updates the quantity if the product already exists.
+Add a product to the cart. If the product already exists in the cart, the quantity will be increased by the specified amount.
 
 **Request Body:**
 ```json
 {
-    "product_id": 2,
-    "quantity": 1,  // Can be positive or negative
-    "email": "user@example.com"
+  "email": "user@example.com",
+  "product_id": 123,
+  "quantity": 1  // Optional, defaults to 1
 }
 ```
 
-**Important Notes:**
-- If the product already exists in the cart:
-  - Positive quantity: Adds to existing quantity
-  - Negative quantity: Reduces existing quantity (e.g., -1 to reduce by 1)
-  - If reducing to 0 or less, the item is removed from cart
-- If the product is not in cart:
-  - Positive quantity: Adds new item with specified quantity
-  - Negative quantity: Returns error (cannot reduce non-existent item)
-- The total quantity cannot exceed the product's available stock
-- All quantities must be integers (positive or negative)
-
-**Response:**
+**Response (200 OK):**
 ```json
 {
-    "message": "Quantity increased. New total: 3",  // When adding items
-    "cart_id": 1,
-    "product_id": 2,
-    "quantity": 3
-}
-```
-or
-```json
-{
-    "message": "Quantity reduced. Remaining: 2",  // When reducing items
-    "cart_id": 1,
-    "product_id": 2,
-    "quantity": 2
-}
-```
-or
-```json
-{
-    "message": "Item removed from cart",  // When reducing to 0
-    "cart_id": 1,
-    "product_id": 2,
-    "quantity": 0
+  "message": "Product added to cart successfully",
+  "cart_id": 1,
+  "product_id": 123,
+  "quantity": 2  // Total quantity after adding (includes existing quantity if product was already in cart)
 }
 ```
 
 **Error Responses:**
-- 400: Invalid request (missing fields, invalid email, insufficient stock)
-- 400: Cannot reduce quantity of item not in cart
-- 404: Product not found
-- 500: Server error
-
-**Example Usage:**
-```bash
-# Add 2 items to cart
-curl -X POST 'http://localhost:5000/api/cart' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "product_id": 2,
-    "quantity": 2,
-    "email": "user@example.com"
-  }'
-
-# Reduce quantity by 1
-curl -X POST 'http://localhost:5000/api/cart' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "product_id": 2,
-    "quantity": -1,
-    "email": "user@example.com"
-  }'
-
-# Reduce quantity by 2
-curl -X POST 'http://localhost:5000/api/cart' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "product_id": 2,
-    "quantity": -2,
-    "email": "user@example.com"
-  }'
-```
+- 400 Bad Request: `{"error": "No JSON data provided"}`
+- 400 Bad Request: `{"error": "product_id is required"}`
+- 400 Bad Request: `{"error": "quantity must be a positive integer"}`
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 400 Bad Request: `{"error": "Not enough stock available"}`
+- 404 Not Found: `{"error": "Product not found"}`
+- 500 Internal Server Error: `{"error": "Failed to add product to cart", "message": "error details"}`
 
 ### DELETE /cart/{cart_id}/products/{product_id}
-Removes a product from the cart or reduces its quantity.
+Remove a product from the cart.
 
 **Query Parameters:**
 - `email` (required): User's email address
-- `quantity` (optional): Number of items to remove. Can be:
-  - Positive number: Remove that many items
-  - Negative number: Reduce by that amount (e.g., -1 to reduce by 1)
-  - Not specified: Remove all items
 
 **Alternative: Request Body (if not using query parameters):**
 ```json
 {
-    "email": "user@example.com",
-    "quantity": -1  // Optional: Negative number to reduce by that amount
+  "email": "user@example.com"
 }
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
-    "message": "Quantity reduced. Remaining: 2"  // If reducing some items
-}
-```
-or
-```json
-{
-    "message": "Item removed from cart"  // If removing all items
+  "message": "Item removed from cart"
 }
 ```
 
 **Error Responses:**
-- 400: Email is required
-- 400: Invalid email
-- 404: Cart not found
-- 404: Product not found in cart
-- 500: Server error
-
-**Example Usage:**
-```bash
-# Remove all items of a product
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com'
-
-# Reduce quantity by 1 (using negative number)
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com&quantity=-1'
-
-# Reduce quantity by 2 (using negative number)
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com&quantity=-2'
-
-# Remove 2 items (using positive number)
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com&quantity=2'
-
-# Reduce quantity using JSON body
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "email": "user@example.com",
-    "quantity": -1
-  }'
-```
+- 400 Bad Request: `{"error": "Email is required"}`
+- 400 Bad Request: `{"error": "Invalid email"}`
+- 404 Not Found: `{"error": "Cart not found"}`
+- 404 Not Found: `{"error": "Product not found in cart"}`
+- 500 Internal Server Error: `{"error": "Failed to remove item from cart", "message": "error details"}`
 
 ### POST /cart/checkout
 Checkout the cart and create an order.
@@ -902,6 +812,85 @@ curl -X GET 'http://localhost:5000/home?category=1'
 curl -X GET 'http://localhost:5000/product/1'
 ```
 
+### GET `/search`
+Search for products with various filters and sorting options.
+
+**Query Parameters:**
+- `q` (optional): Search query string to match against product name and description
+- `category` (optional): Filter by category ID
+- `min_price` (optional): Minimum price filter
+- `max_price` (optional): Maximum price filter
+- `sort_by` (optional): Field to sort by (name, price, created_at). Default: name
+- `order` (optional): Sort order (asc, desc). Default: asc
+- `page` (optional): Page number for pagination. Default: 1
+- `per_page` (optional): Number of items per page. Default: 10
+
+**Response:**
+```json
+{
+    "products": [
+        {
+            "id": 1,
+            "name": "Product Name",
+            "description": "Product Description",
+            "price": 99.99,
+            "stock": 50,
+            "image_url": "http://example.com/image.jpg",
+            "category_id": 1,
+            "category_name": "Electronics",
+            "created_at": "2024-03-15T10:30:00"
+        }
+    ],
+    "total": 100,
+    "pages": 10,
+    "current_page": 1,
+    "has_next": true,
+    "has_prev": false
+}
+```
+
+**Error Response:**
+```json
+{
+    "error": "Failed to search products",
+    "message": "Error details"
+}
+```
+
+**Example Usage:**
+```bash
+# Basic search
+curl -X GET 'http://localhost:5000/search?q=laptop'
+
+# Search with filters
+curl -X GET 'http://localhost:5000/search?q=laptop&category=1&min_price=500&max_price=1000'
+
+# Search with sorting
+curl -X GET 'http://localhost:5000/search?q=laptop&sort_by=price&order=desc'
+
+# Search with pagination
+curl -X GET 'http://localhost:5000/search?q=laptop&page=2&per_page=20'
+
+# Complex search with all parameters
+curl -X GET 'http://localhost:5000/search?q=laptop&category=1&min_price=500&max_price=1000&sort_by=price&order=desc&page=2&per_page=20'
+```
+
+**Features:**
+- Full-text search in product name and description
+- Category filtering
+- Price range filtering
+- Multiple sorting options
+- Pagination support
+- Case-insensitive search
+- Flexible parameter combinations
+
+**Notes:**
+- All parameters are optional
+- Search is case-insensitive
+- Price filters accept decimal values
+- Pagination starts from 1
+- Maximum items per page is 100
+
 # NEOMART E-commerce API Documentation
 
 ## Cart API
@@ -942,145 +931,43 @@ Adds a product to the cart or updates the quantity if the product already exists
 ```json
 {
     "product_id": 2,
-    "quantity": 1,  // Can be positive or negative
+    "quantity": 1,
     "email": "user@example.com"
 }
 ```
 
 **Important Notes:**
-- If the product already exists in the cart:
-  - Positive quantity: Adds to existing quantity
-  - Negative quantity: Reduces existing quantity (e.g., -1 to reduce by 1)
-  - If reducing to 0 or less, the item is removed from cart
-- If the product is not in cart:
-  - Positive quantity: Adds new item with specified quantity
-  - Negative quantity: Returns error (cannot reduce non-existent item)
-- The total quantity cannot exceed the product's available stock
-- All quantities must be integers (positive or negative)
+- If the product already exists in the cart, the new quantity will be ADDED to the existing quantity
+- The total quantity (existing + new) cannot exceed the product's available stock
+- The response includes the TOTAL quantity after the addition
+- All quantities must be positive integers
 
 **Response:**
 ```json
 {
-    "message": "Quantity increased. New total: 3",  // When adding items
+    "message": "Product added to cart successfully",
     "cart_id": 1,
     "product_id": 2,
-    "quantity": 3
-}
-```
-or
-```json
-{
-    "message": "Quantity reduced. Remaining: 2",  // When reducing items
-    "cart_id": 1,
-    "product_id": 2,
-    "quantity": 2
-}
-```
-or
-```json
-{
-    "message": "Item removed from cart",  // When reducing to 0
-    "cart_id": 1,
-    "product_id": 2,
-    "quantity": 0
+    "quantity": 3  // This is the total quantity after addition
 }
 ```
 
 **Error Responses:**
 - 400: Invalid request (missing fields, invalid email, insufficient stock)
-- 400: Cannot reduce quantity of item not in cart
 - 404: Product not found
 - 500: Server error
 
-**Example Usage:**
-```bash
-# Add 2 items to cart
-curl -X POST 'http://localhost:5000/api/cart' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "product_id": 2,
-    "quantity": 2,
-    "email": "user@example.com"
-  }'
-
-# Reduce quantity by 1
-curl -X POST 'http://localhost:5000/api/cart' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "product_id": 2,
-    "quantity": -1,
-    "email": "user@example.com"
-  }'
-
-# Reduce quantity by 2
-curl -X POST 'http://localhost:5000/api/cart' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "product_id": 2,
-    "quantity": -2,
-    "email": "user@example.com"
-  }'
-```
-
 #### DELETE /cart/{cart_id}/products/{product_id}
-Removes a product from the cart or reduces its quantity.
+Removes a product from the cart.
 
 **Query Parameters:**
 - `email` (required): User's email address
-- `quantity` (optional): Number of items to remove. Can be:
-  - Positive number: Remove that many items
-  - Negative number: Reduce by that amount (e.g., -1 to reduce by 1)
-  - Not specified: Remove all items
-
-**Alternative: Request Body (if not using query parameters):**
-```json
-{
-    "email": "user@example.com",
-    "quantity": -1  // Optional: Negative number to reduce by that amount
-}
-```
 
 **Response:**
 ```json
 {
-    "message": "Quantity reduced. Remaining: 2"  // If reducing some items
+    "message": "Product removed from cart successfully"
 }
-```
-or
-```json
-{
-    "message": "Item removed from cart"  // If removing all items
-}
-```
-
-**Error Responses:**
-- 400: Email is required
-- 400: Invalid email
-- 404: Cart not found
-- 404: Product not found in cart
-- 500: Server error
-
-**Example Usage:**
-```bash
-# Remove all items of a product
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com'
-
-# Reduce quantity by 1 (using negative number)
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com&quantity=-1'
-
-# Reduce quantity by 2 (using negative number)
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com&quantity=-2'
-
-# Remove 2 items (using positive number)
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2?email=user@example.com&quantity=2'
-
-# Reduce quantity using JSON body
-curl -X DELETE 'http://localhost:5000/api/cart/1/products/2' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "email": "user@example.com",
-    "quantity": -1
-  }'
 ```
 
 #### POST /cart/checkout
@@ -1231,4 +1118,39 @@ Get detailed information about a specific order.
 {
     "error": "Order not found"
 }
+```- **500 Internal Server Error:**
+```json
+{
+    "error": "Error message description"
+}
+```## Example Usage
+
+1. **Get All Orders:**
+```bash
+curl -X GET 'http://localhost:5000/orders' \
+  -H 'Authorization: Bearer your_token'
 ```
+
+2. **Get Order Details:**
+```bash
+curl -X GET 'http://localhost:5000/orders/1' \
+  -H 'Authorization: Bearer your_token'
+```## Features
+
+- **Order History**: View all past orders
+- **Order Details**: Get detailed information about specific orders
+- **Item Details**: View products purchased in each order
+- **Credit Tracking**: See credits used and earned for each order
+- **Status Tracking**: Monitor order status
+- **Secure Access**: Only authenticated users can view their own orders
+
+## Error Handling
+
+- `401 Unauthorized`: User not authenticated
+- `404 Not Found`: Order not found or not owned by user
+- `500 Internal Server Error`: Server-side error
+
+
+
+
+
