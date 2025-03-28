@@ -8,20 +8,14 @@ from models import db
 from dotenv import load_dotenv
 from flask_login import LoginManager
 from datetime import timedelta
-#from config import Config
-#from routes.product import product_bp
-#from routes.order import order_bp
-#from routes.cart import cart_bp
 
 mail = Mail()
 jwt = JWTManager()
-
 
 # Create Flask app
 def create_app(*args, **kwargs):
     app = Flask(__name__)
 
-    
     # Initialize CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
     
@@ -89,8 +83,9 @@ def create_app(*args, **kwargs):
 
     # Add JWT token loader
     @jwt.user_identity_loader
-    def user_identity_lookup(user):
-        return user.id
+    def user_identity_lookup(identity):
+        # Simply return the identity (user_id) as is
+        return identity
 
     @jwt.user_lookup_loader
     def user_lookup_callback(_jwt_header, jwt_data):
@@ -109,13 +104,10 @@ def create_app(*args, **kwargs):
     app.register_blueprint(cart_bp, url_prefix="/api/cart")
     app.register_blueprint(group_buy_bp, url_prefix="/api/groupbuy")
 
-
-
     # Error Handling
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({"error": "Not Found"}), 404
-    
     
     return app
 
